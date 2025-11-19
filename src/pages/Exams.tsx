@@ -1,5 +1,6 @@
-export const Exams = () => {
-  // Demo exam data — you can replace with API data later
+
+
+const Exams = () => {
   const upcomingExams = [
     { subject: "Mathematics II", date: "2025-02-10", time: "10:00 AM" },
     { subject: "Biology Final", date: "2025-02-14", time: "01:00 PM" },
@@ -13,37 +14,59 @@ export const Exams = () => {
   ];
 
   return (
-    <div className="min-h-screen p-8 bg-gray-100">
-      <h1 className="text-3xl font-bold mb-8 text-blue-600">Exam Schedule</h1>
+    <div className="min-h-screen p-10 bg bg-linear-to-br from-[#F3E8FF] to-[#E0F2FE] font-body">
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        {/* Upcoming Exams */}
-        <div className="bg-white p-6 rounded-xl shadow-md">
-          <h2 className="text-xl font-semibold mb-4 text-gray-700">Upcoming Exams</h2>
+      <h1 className="text-4xl font-heading font-bold mb-3 text-gray-800">
+        Exam Schedule
+      </h1>
+      <p className="text-gray-600 mb-10 text-lg">
+        View upcoming and completed examinations
+      </p>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+
+        {/* UPCOMING EXAMS */}
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
+          <h2 className="text-lg font-heading font-semibold mb-5 
+            bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] text-white 
+            px-4 py-2 rounded-md w-fit">
+            Upcoming Exams
+          </h2>
 
           <ul className="space-y-4">
             {upcomingExams.map((exam, index) => (
-              <li key={index} className="border rounded-lg p-4 bg-gray-50 shadow-sm">
-                <p className="text-lg font-semibold text-blue-600">{exam.subject}</p>
-                <p className="text-gray-600">Date: {exam.date}</p>
-                <p className="text-gray-600">Time: {exam.time}</p>
+              <li key={index}
+                className="border border-gray-200 rounded-xl p-4 bg-[#F9FAFB] shadow-sm">
+                
+                <p className="text-xl font-semibold text-blue-600 font-heading">
+                  {exam.subject}
+                </p>
+                <p className="text-gray-600 font-body">Date: {exam.date}</p>
+                <p className="text-gray-600 font-body">Time: {exam.time}</p>
               </li>
             ))}
           </ul>
         </div>
 
-        {/* Finished Exams */}
-        <div className="bg-white p-6 rounded-xl shadow-md">
-          <h2 className="text-xl font-semibold mb-4 text-gray-700">Finished Exams</h2>
+        {/* FINISHED EXAMS */}
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
+          <h2 className="text-lg font-heading font-semibold mb-5 
+            bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] text-white 
+            px-4 py-2 rounded-md w-fit">
+            Finished Exams
+          </h2>
 
           <ul className="space-y-4">
             {finishedExams.map((exam, index) => (
-              <li key={index} className="border rounded-lg p-4 bg-gray-50 shadow-sm">
-                <p className="text-lg font-semibold text-green-600">{exam.subject}</p>
-                <p className="text-gray-600">Date: {exam.date}</p>
-                <p className="text-gray-600">
-                  Result: <span className="font-medium">{exam.score}</span>
+              <li key={index}
+                className="border border-gray-200 rounded-xl p-4 bg-[#F9FAFB] shadow-sm">
+                
+                <p className="text-xl font-semibold text-green-600 font-heading">
+                  {exam.subject}
+                </p>
+                <p className="text-gray-600 font-body">Date: {exam.date}</p>
+                <p className="text-gray-600 font-body">
+                  Result: <span className="font-semibold">{exam.score}</span>
                 </p>
               </li>
             ))}
@@ -53,4 +76,6 @@ export const Exams = () => {
       </div>
     </div>
   );
-}
+};
+
+export default Exams;

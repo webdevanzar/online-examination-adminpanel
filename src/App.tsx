@@ -3,11 +3,11 @@ import { Route, Routes } from "react-router-dom";
 import { Dashboard } from "./pages/Dashboard";
 import { Login } from "./pages/Login";
 import { Signup } from "./pages/Signup";
-import { Exams } from "./pages/Exams";
 import { Results } from "./pages/Results";
 import { Courses } from "./pages/Courses";
 import { Students } from "./pages/Students";
 import Layout from "./layouts/Layout";
+import Exams from "./pages/Exams";
 
 function App() {
   return (

@@ -1,4 +1,4 @@
-export default function CoursesPage() {
+export const Courses=()=> {
   const courses = [
     {
       title: "Mathematics",

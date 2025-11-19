@@ -1,4 +1,4 @@
-export default function UserPage() {
+export const Students = () => {
   const user = {
     name: "John Doe",
     email: "john.doe@example.com",
@@ -18,20 +18,34 @@ export default function UserPage() {
 
       {/* User Info Card */}
       <div className="bg-white p-6 rounded-xl shadow-md mb-8">
-        <h3 className="text-2xl font-bold text-blue-600 mb-4">Personal Information</h3>
+        <h3 className="text-2xl font-bold text-blue-600 mb-4">
+          Personal Information
+        </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
-          <p><span className="font-semibold">Name:</span> {user.name}</p>
-          <p><span className="font-semibold">Email:</span> {user.email}</p>
-          <p><span className="font-semibold">Phone:</span> {user.phone}</p>
-          <p><span className="font-semibold">Address:</span> {user.address}</p>
-          <p><span className="font-semibold">Joined:</span> {user.joined}</p>
+          <p>
+            <span className="font-semibold">Name:</span> {user.name}
+          </p>
+          <p>
+            <span className="font-semibold">Email:</span> {user.email}
+          </p>
+          <p>
+            <span className="font-semibold">Phone:</span> {user.phone}
+          </p>
+          <p>
+            <span className="font-semibold">Address:</span> {user.address}
+          </p>
+          <p>
+            <span className="font-semibold">Joined:</span> {user.joined}
+          </p>
         </div>
       </div>
 
       {/* Courses Card */}
       <div className="bg-white p-6 rounded-xl shadow-md">
-        <h3 className="text-2xl font-bold text-blue-600 mb-4">Course History</h3>
+        <h3 className="text-2xl font-bold text-blue-600 mb-4">
+          Course History
+        </h3>
 
         <table className="w-full border-collapse text-left">
           <thead>
@@ -55,4 +69,4 @@ export default function UserPage() {
       </div>
     </div>
   );
-}
+};

@@ -1,28 +1,31 @@
-import { Route, Routes } from "react-router-dom"
-import LoginForm from "./pages/Loginform"
-import Signup from "./pages/Signup"
-import Dashboard from "./pages/dashboard"
-import ExamPage from "./pages/Exampage"
-import ResultPage from "./pages/ResultPage"
-import UserPage from "./pages/UserPage"
-import CoursesPage from "./pages/CoursesPage"
+import { Route, Routes } from "react-router-dom";
+
+import { Dashboard } from "./pages/Dashboard";
+import { Login } from "./pages/Login";
+import { Signup } from "./pages/Signup";
+import { Exams } from "./pages/Exams";
+import { Results } from "./pages/Results";
+import { Courses } from "./pages/Courses";
+import { Students } from "./pages/Students";
+import Layout from "./layouts/Layout";
 
 function App() {
-
   return (
-      <Routes>
+    <Routes>
+      {/* Auth Pages (no layout) */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+
+      {/* Protected Layout */}
+      <Route element={<Layout />}>
         <Route index element={<Dashboard />} />
-        <Route path="/login" element={<LoginForm />} />
-        <Route path="/Signup"element={<Signup />}/>
-        <Route path="/exam"element={<ExamPage />}/>
-        <Route path="/results"element={<ResultPage/>}/>
-        <Route path="/courses"element={<CoursesPage/>}/>
-        <Route path="/users" element={<UserPage/>}/>
-        
-       
-      </Routes>
-  )
+        <Route path="/students" element={<Students />} />
+        <Route path="/exam" element={<Exams />} />
+        <Route path="/results" element={<Results />} />
+        <Route path="/courses" element={<Courses />} />
+      </Route>
+    </Routes>
+  );
 }
 
-
-export default App
+export default App;

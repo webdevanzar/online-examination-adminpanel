@@ -1,4 +1,4 @@
-export default function ExamPage() {
+export const Exams = () => {
   // Demo exam data — you can replace with API data later
   const upcomingExams = [
     { subject: "Mathematics II", date: "2025-02-10", time: "10:00 AM" },

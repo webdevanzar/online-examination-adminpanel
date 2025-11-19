@@ -1,4 +1,4 @@
-export default function ResultPage() {
+export const Results = () => {
   // Example data (you can replace with API data)
   const results = [
     { name: "John Doe", score: 85, status: "Pass" },

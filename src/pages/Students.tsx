@@ -109,7 +109,10 @@ export const Students: React.FC = () => {
         {/* 🧊 User Table Card */}
         <div className="bg-white p-6 max-w-[100vw] overflow-x-auto rounded-2xl shadow-xl border border-gray-200">
           <div className="max-h-[70vh] overflow-auto">
-          <table className=" min-w-full w-full border-collapse text-left">
+          <table className="bg-white p-6 max-w-[100vw] overflow-x-auto rounded-2xl shadow-xl border border-gray-200 min-w-full w-full border-collapse text-left">
+          
+        
+
             <thead>
               <tr className="bg-linear-to-br from-blue-400 to-blue-900 text-white">
                 <th className="p-3 text-sm">SL No</th>
@@ -169,13 +172,14 @@ export const Students: React.FC = () => {
               ))}
             </tbody>
           </table>
+        </div>
 
           {filteredUsers.length === 0 && (
             <p className="text-center text-gray-500 py-6">No users found.</p>
           )}
         </div>
       </div>
-      </div>
+      
 
       {/* Popup */}
       {selectedUser && (

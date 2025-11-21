@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import AddEditQuestionPopup from "../components/AddEditQuestionPopup";
 
 export interface OptionType {
@@ -73,7 +73,7 @@ const AddQuestionsPage = () => {
         </button>
       </div>
 
-      {/* TILES */}
+      {/* Tiles */}
       <div className="space-y-4">
         {questions.map((q) => (
           <div
@@ -84,6 +84,7 @@ const AddQuestionsPage = () => {
             <p className="font-bold text-lg">
               {q.order}. {q.questionText}
             </p>
+
             <p className="text-gray-600 capitalize">
               Type: {q.type} • Marks: {q.marks}
             </p>
@@ -91,14 +92,18 @@ const AddQuestionsPage = () => {
         ))}
       </div>
 
-      {/* POPUP */}
+      {/* Popup */}
       {popupData && (
         <AddEditQuestionPopup
-          mode={popupMode}
-          data={popupData}
-          onSave={saveQuestion}
-          onDelete={deleteQuestion}
+          isOpen={true}
+          initialData={popupData}
           onClose={() => setPopupData(null)}
+          onSubmit={(data) => {
+            saveQuestion({
+              ...popupData,
+              ...data,
+            });
+          }}
         />
       )}
     </div>

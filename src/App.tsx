@@ -10,6 +10,8 @@ import Layout from "./layouts/Layout";
 import Exams from "./pages/Exams";
 import AddQuestionsPage from "./pages/AddQuestionsPage";
 
+
+
 function App() {
   return (
     <Routes>
@@ -22,9 +24,8 @@ function App() {
         <Route index element={<Dashboard />} />
         <Route path="/students" element={<Students />} />
         <Route path="/exam" element={<Exams />} />
-        <Route path="/exam/:examid" element={<AddQuestionsPage />} />
+        <Route path="/exam/:examid/questions" element={<AddQuestionsPage />} />
 
-        
         <Route path="/results" element={<Results />} />
         <Route path="/courses" element={<Courses />} />
       </Route>

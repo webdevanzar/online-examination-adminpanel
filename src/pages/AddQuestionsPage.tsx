@@ -1,5 +1,7 @@
 import { useState } from "react";
 import AddEditQuestionPopup from "../components/AddEditQuestionPopup";
+import ViewQuestionPopup from "../components/ViewQuestionPopup";
+import type { QuestionViewData } from "../components/ViewQuestionPopup";
 
 export interface OptionType {
   id?: string;
@@ -23,6 +25,8 @@ const AddQuestionsPage = () => {
   const [questions, setQuestions] = useState<QuestionTypeUI[]>([]);
   const [popupData, setPopupData] = useState<QuestionTypeUI | null>(null);
   const [popupMode, setPopupMode] = useState<"add" | "edit">("add");
+  const [viewOpen, setViewOpen] = useState(false);
+  const [selected, setSelected] = useState<QuestionTypeUI | null>(null);
 
   const openAddPopup = () => {
     setPopupMode("add");
@@ -37,18 +41,21 @@ const AddQuestionsPage = () => {
     });
   };
 
-  const openEditPopup = (q: QuestionTypeUI) => {
-    setPopupMode("edit");
-    setPopupData(q);
+  const openViewPopup = (q: QuestionTypeUI) => {
+    setSelected(q);
+    setViewOpen(true);
   };
 
   const saveQuestion = (data: QuestionTypeUI) => {
+    const normalized: QuestionTypeUI = {
+      ...data,
+      answerMinLength: data.answerMinLength ?? undefined,
+      answerMaxLength: data.answerMaxLength ?? undefined,
+    };
     if (popupMode === "add") {
-      setQuestions([...questions, data]);
+      setQuestions((prev) => [...prev, normalized]);
     } else {
-      setQuestions(
-        questions.map((q) => (q.order === data.order ? data : q))
-      );
+      setQuestions((prev) => prev.map((q) => (q.order === normalized.order ? normalized : q)));
     }
     setPopupData(null);
   };
@@ -58,6 +65,8 @@ const AddQuestionsPage = () => {
     filtered.forEach((q, i) => (q.order = i + 1));
     setQuestions(filtered);
     setPopupData(null);
+    setSelected(null);
+    setViewOpen(false);
   };
 
   return (
@@ -78,11 +87,11 @@ const AddQuestionsPage = () => {
         {questions.map((q) => (
           <div
             key={q.order}
-            onClick={() => openEditPopup(q)}
-            className="p-4 bg-white border rounded-xl shadow cursor-pointer hover:bg-blue-50"
+            onClick={() => openViewPopup(q)}
+            className="p-4 bg-white border border-gray-200 rounded-xl shadow-sm cursor-pointer hover:bg-blue-50 hover:shadow transition"
           >
-            <p className="font-bold text-lg">
-              {q.order}. {q.questionText}
+            <p className="font-bold text-lg text-gray-800">
+              {q.order}. {q.questionText || "Untitled question"}
             </p>
 
             <p className="text-gray-600 capitalize">
@@ -102,8 +111,28 @@ const AddQuestionsPage = () => {
             saveQuestion({
               ...popupData,
               ...data,
-            });
+            } as QuestionTypeUI);
           }}
+        />
+      )}
+
+      {/* View/Edit/Delete Popup */}
+      {selected && (
+        <ViewQuestionPopup
+          isOpen={viewOpen}
+          question={selected as QuestionViewData}
+          onClose={() => setViewOpen(false)}
+          onUpdate={(updated: QuestionViewData) => {
+            const normalized: QuestionTypeUI = {
+              ...updated,
+              answerMinLength: updated.answerMinLength ?? undefined,
+              answerMaxLength: updated.answerMaxLength ?? undefined,
+            };
+            setQuestions((prev) => prev.map((q) => (q.order === normalized.order ? { ...q, ...normalized } : q)));
+            setSelected((prev) => (prev ? { ...prev, ...normalized } : prev));
+            setViewOpen(false);
+          }}
+          onDelete={deleteQuestion}
         />
       )}
     </div>

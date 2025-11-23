@@ -3,19 +3,7 @@ import { CheckCircle } from "lucide-react";
 export const Dashboard = () => {
   return (
     <div>
-      {/* Top Bar */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-semibold">Overview</h2>
-
-        <div className="hidden md:flex items-center gap-4">
-          <input
-            type="text"
-            placeholder="Search..."
-            className="px-4 py-2 border rounded-lg bg-white shadow"
-          />
-          <div className="w-10 h-10 rounded-full bg-blue-500"></div>
-        </div>
-      </div>
+      <h2 className="text-3xl font-semibold mb-6">Overview</h2>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

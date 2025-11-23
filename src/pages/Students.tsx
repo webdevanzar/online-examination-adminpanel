@@ -1,5 +1,6 @@
 import { useState } from "react";
 import UpdateUserPopup from "../components/UpdateUserPopup";
+import Table from "../components/Table";
 
 interface User {
   profile: string;
@@ -106,80 +107,44 @@ export const Students: React.FC = () => {
           />
         </div>
 
-        {/* 🧊 User Table Card */}
-        <div className="bg-white p-6 max-w-[100vw] overflow-x-auto rounded-2xl shadow-xl border border-gray-200">
-          <div className="max-h-[70vh] overflow-auto">
-          <table className="bg-white p-6 max-w-[100vw] overflow-x-auto rounded-2xl shadow-xl border border-gray-200 min-w-full w-full border-collapse text-left">
-          
-        
-
-            <thead>
-              <tr className="bg-linear-to-br from-blue-400 to-blue-900 text-white">
-                <th className="p-3 text-sm">SL No</th>
-                <th className="p-3 text-sm">Profile</th>
-                <th className="p-3 text-sm">Username</th>
-                <th className="p-3 text-sm">Email</th>
-                <th className="p-3 text-sm">Contact</th>
-                <th className="p-3 text-sm text-center">Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredUsers.map((u, i) => (
-                <tr
-                  key={i}
-                  className="border-b hover:bg-purple-50 transition-all duration-200"
-                >
-                  <td className="p-3 font-semibold">{i + 1}</td>
-                  
-
-                  <td className="p-3">
-                    <img
-                      src={u.profile}
-                      alt="profile"
-                      className="h-12 w-12 rounded-full border object-cover 
-                                 shadow-sm ring-2 ring-purple-200"
-                    />
-                  </td>
-
-                  <td className="p-3 font-semibold text-gray-800">{u.username}</td>
-
-                  <td className="p-3 text-gray-600">{u.email}</td>
-
-                  <td className="p-3 text-gray-700">
-                    {u.phone ? u.phone : "—"}
-                  </td>
-
-                  {/* Buttons */}
-                  <td className="p-3 flex gap-3 justify-center">
-                    <button
-                      onClick={() => setSelectedUser(u)}
-                      className="px-4 py-1 bg-blue-500 text-white rounded-lg 
-                                 hover:bg-blue-600 shadow-md transition"
-                    >
-                      Update
-                    </button>
-
-                    <button
-                      onClick={() => deleteUser(u.email)}
-                      className="px-4 py-1 bg-red-500 text-white rounded-lg 
-                                 hover:bg-red-600 shadow-md transition"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-          {filteredUsers.length === 0 && (
-            <p className="text-center text-gray-500 py-6">No users found.</p>
+        {/* 🧊 User Table */}
+        <Table
+          fields={["SL No", "Profile", "Username", "Email", "Contact", "Actions"]}
+          data={filteredUsers}
+          formatRow={(u: any, i: number) => (
+            <>
+              <td className="p-3 font-semibold whitespace-nowrap">{i + 1}</td>
+              <td className="p-3 whitespace-nowrap">
+                <img
+                  src={u.profile}
+                  alt="profile"
+                  className="h-12 w-12 rounded-full border object-cover shadow-sm ring-2 ring-purple-200"
+                />
+              </td>
+              <td className="p-3 font-semibold text-gray-800 whitespace-nowrap">{u.username}</td>
+              <td className="p-3 text-gray-600 whitespace-nowrap">{u.email}</td>
+              <td className="p-3 text-gray-700 whitespace-nowrap">{u.phone ? u.phone : "—"}</td>
+              <td className="p-3">
+                <div className="flex gap-3 justify-center min-w-[200px]">
+                  <button
+                    onClick={() => setSelectedUser(u)}
+                    className="px-4 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 shadow-md transition"
+                  >
+                    Update
+                  </button>
+                  <button
+                    onClick={() => deleteUser(u.email)}
+                    className="px-4 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 shadow-md transition"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </td>
+            </>
           )}
-        </div>
+          stickyHeaderOffset="0px"
+        />
       </div>
-      
 
       {/* Popup */}
       {selectedUser && (

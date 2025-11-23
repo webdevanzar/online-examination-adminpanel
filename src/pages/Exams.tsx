@@ -46,56 +46,53 @@ const Exams: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen p-10 bg bg-linear-to-br from-[#F3E8FF] to-[#E0F2FE] font-body">
+    <div className="relative min-h-screen p-6 md:p-10 bg-gray-50">
 
       <button
         onClick={() => setShowPopup(true)}
-        className="absolute top-6 right-6 w-12 h-12 rounded-full bg-blue-600 text-white text-3xl font-bold flex items-center justify-center shadow-lg hover:bg-blue-700"
+        className="absolute top-6 right-6 w-12 h-12 rounded-full bg-blue-600 text-white text-3xl font-bold flex items-center justify-center shadow hover:bg-blue-700"
+        aria-label="Create Exam"
       >
         +
       </button>
 
-      <h1 className="text-4xl font-heading font-bold mb-3 text-gray-800">Exam Schedule</h1>
-      <p className="text-gray-600 mb-10 text-lg">View upcoming and completed examinations</p>
+      <h1 className="text-3xl md:text-4xl font-bold mb-2 text-gray-800">Exam Schedule</h1>
+      <p className="text-gray-600 mb-8">View upcoming and completed examinations</p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
         {/* UPCOMING EXAMS */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-heading font-semibold mb-5 bg-blue-700 text-white px-4 py-2 rounded-md w-fit">
-            Upcoming Exams
-          </h2>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-blue-700 mb-5">Upcoming Exams</h2>
 
           <ul className="space-y-4">
             {upcomingExams.map((exam) => (
               <li
                 key={exam.id}
                 onClick={() => openAddQuestions(exam)}
-                className="border border-gray-200 rounded-xl p-4 bg-[#F9FAFB] shadow-sm cursor-pointer hover:bg-blue-50 hover:shadow-md transition"
+                className="border border-gray-200 rounded-xl p-4 bg-[#F9FAFB] shadow-sm cursor-pointer hover:bg-blue-50 hover:shadow transition"
               >
-                <p className="text-xl font-semibold text-blue-600 font-heading">{exam.subject}</p>
-                <p className="text-gray-600 font-body">Date: {exam.date}</p>
-                <p className="text-gray-600 font-body">Time: {exam.time}</p>
+                <p className="text-lg md:text-xl font-semibold text-blue-600">{exam.subject}</p>
+                <p className="text-gray-600">Date: {exam.date}</p>
+                <p className="text-gray-600">Time: {exam.time}</p>
               </li>
             ))}
           </ul>
         </div>
 
         {/* FINISHED EXAMS */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-heading font-semibold mb-5 bg-green-700 text-white px-4 py-2 rounded-md w-fit">
-            Finished Exams
-          </h2>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-blue-700 mb-5">Finished Exams</h2>
 
           <ul className="space-y-4">
             {finishedExams.map((exam) => (
               <li
                 key={exam.id}
                 onClick={() => openAddQuestions(exam)}
-                className="border border-gray-200 rounded-xl p-4 bg-[#F9FAFB] shadow-sm cursor-pointer hover:bg-green-50 hover:shadow-md transition"
+                className="border border-gray-200 rounded-xl p-4 bg-[#F9FAFB] shadow-sm cursor-pointer hover:bg-gray-50 hover:shadow transition"
               >
-                <p className="text-xl font-semibold text-green-600 font-heading">{exam.subject}</p>
-                <p className="text-gray-600 font-body">Date: {exam.date}</p>
-                <p className="text-gray-600 font-body">Result: <span className="font-semibold">{exam.score}</span></p>
+                <p className="text-lg md:text-xl font-semibold text-gray-800">{exam.subject}</p>
+                <p className="text-gray-600">Date: {exam.date}</p>
+                <p className="text-gray-600">Result: <span className="font-semibold">{exam.score}</span></p>
               </li>
             ))}
           </ul>

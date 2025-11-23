@@ -30,7 +30,7 @@ const Sidebar = ({ open, setOpen }: { open: boolean; setOpen: (value: boolean) =
       {/* Sidebar */}
       <aside
         className={`
-          fixed md:static top-0 left-0 h-full w-64 bg-white shadow-xl p-6 z-50
+          fixed md:static top-0 left-0 h-full w-64 bg-white shadow-xl p-6 z-50 border-r border-gray-100
           transform transition-transform duration-300
           ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
@@ -44,7 +44,7 @@ const Sidebar = ({ open, setOpen }: { open: boolean; setOpen: (value: boolean) =
         </div>
 
         {/* Logo */}
-        <h1 className="text-3xl font-bold mb-10 text-blue-600 hidden md:block">
+        <h1 className="text-3xl font-bold mb-10 text-blue-700 hidden md:block">
           Admin Panel
         </h1>
 
@@ -56,11 +56,11 @@ const Sidebar = ({ open, setOpen }: { open: boolean; setOpen: (value: boolean) =
               to={item.path}
               onClick={() => setOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all 
+                `flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all border border-transparent
                 ${
                   isActive
-                    ? "bg-blue-100 text-blue-600 font-semibold border-l-4 border-blue-600"
-                    : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
+                    ? "bg-blue-50 text-blue-700 font-semibold border-blue-200"
+                    : "text-gray-700 hover:bg-gray-50 hover:text-blue-700"
                 }`
               }
             >

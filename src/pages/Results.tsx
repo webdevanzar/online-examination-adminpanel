@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Table from "../components/Table";
 
 export const Results = () => {
   const [search, setSearch] = useState("");
@@ -10,14 +11,8 @@ export const Results = () => {
   ]);
 
   const [deleteTarget, setDeleteTarget] = useState<null | string>(null);
-
-  // --- UPDATE MODAL STATES ---
   const [editTarget, setEditTarget] = useState<null | string>(null);
-  const [editForm, setEditForm] = useState({
-    name: "",
-    score: "",
-    status: "",
-  });
+  const [editForm, setEditForm] = useState({ name: "", score: "", status: "" });
 
   const startEdit = (student: any) => {
     setEditTarget(student.name);
@@ -43,7 +38,6 @@ export const Results = () => {
     setEditTarget(null);
   };
 
-  // Confirm delete
   const confirmDelete = () => {
     setResults((prev) => prev.filter((r) => r.name !== deleteTarget));
     setDeleteTarget(null);
@@ -54,16 +48,16 @@ export const Results = () => {
   );
 
   return (
-    <div className="min-h-screen p-10 bg-linear-to-br from-blue-50 to-purple-100">
-      <h2 className="text-4xl font-bold mb-2 font-serif text-gray-800">
+    <div className="min-h-screen bg-gray-100 p-4 md:p-8 w-full">
+      <h2 className="text-3xl md:text-4xl font-bold mb-2 text-gray-800">
         Exam Results
       </h2>
-      <p className="text-gray-600 mb-8 font-serif text-lg">
+      <p className="text-gray-600 mb-8 text-lg">
         Review the performance of all students
       </p>
 
-      {/* Search Panel */}
-      <div className="bg-white p-4 rounded-xl shadow-md mb-6 flex items-center gap-3">
+      {/* Search */}
+      <div className="w-full bg-white p-4 rounded-xl shadow mb-6">
         <input
           type="text"
           placeholder="Search student by name..."
@@ -73,73 +67,52 @@ export const Results = () => {
         />
       </div>
 
-      {/* Results Table */}
-      <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-gradient-to-br from-blue-700 to-blue-500 text-white">
-              <th className="p-4 text-sm font-semibold">Student Name</th>
-              <th className="p-4 text-sm font-semibold">Score</th>
-              <th className="p-4 text-sm font-semibold">Status</th>
-              <th className="p-4 text-sm font-semibold">Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filtered.map((student, index) => (
-              <tr
-                key={index}
-                className="border-b hover:bg-gray-50 transition text-gray-700"
-              >
-                <td className="p-4 font-medium">{student.name}</td>
-                <td className="p-4">{student.score}</td>
-                <td
-                  className={`p-4 font-semibold ${
-                    student.status === "Fail"
-                      ? "text-red-600"
-                      : "text-green-600"
-                  }`}
+      {/* TABLE CONTAINER */}
+      <Table
+        fields={["S.No", "Student Name", "Score", "Status", "Actions"]}
+        data={filtered}
+        formatRow={(student: { name: string; score: number; status: string }, index: number) => (
+          <>
+            <td className="p-4 font-medium whitespace-nowrap">{index + 1}</td>
+            <td className="p-4 font-medium whitespace-nowrap">{student.name}</td>
+            <td className="p-4 whitespace-nowrap">{student.score}</td>
+            <td
+              className={`p-4 font-semibold whitespace-nowrap ${
+                student.status === "Fail" ? "text-red-600" : "text-green-600"
+              }`}
+            >
+              {student.status}
+            </td>
+            <td className="p-4">
+              <div className="flex gap-2 min-w-[200px]">
+                <button
+                  onClick={() => startEdit(student)}
+                  className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm min-w-[80px]"
                 >
-                  {student.status}
-                </td>
-                <td className="p-4 flex gap-2">
-                  <button
-                    onClick={() => startEdit(student)}
-                    className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm"
-                  >
-                    Update
-                  </button>
-
-                  <button
-                    onClick={() => setDeleteTarget(student.name)}
-                    className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {filtered.length === 0 && (
-          <p className="text-center text-gray-500 py-5">
-            No matching students found.
-          </p>
+                  Update
+                </button>
+                <button
+                  onClick={() => setDeleteTarget(student.name)}
+                  className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm min-w-[80px]"
+                >
+                  Delete
+                </button>
+              </div>
+            </td>
+          </>
         )}
-      </div>
+        stickyHeaderOffset="0px"
+      />
 
-      {/* Delete Confirmation Popup */}
+      {/* DELETE POPUP */}
       {deleteTarget && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-sm text-center">
             <h3 className="text-xl font-semibold mb-3">Delete Result?</h3>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to delete  
-              <span className="font-bold"> {deleteTarget} </span>
-              from the results?
+              Are you sure you want to delete
+              <span className="font-bold text-red-600"> {deleteTarget} </span>?
             </p>
-
             <div className="flex justify-center gap-4">
               <button
                 onClick={() => setDeleteTarget(null)}
@@ -160,7 +133,7 @@ export const Results = () => {
 
       {/* UPDATE POPUP */}
       {editTarget && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-sm">
             <h3 className="text-xl font-semibold mb-4 text-center">
               Update Student

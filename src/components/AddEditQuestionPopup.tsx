@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import Modal from "./Modal";
 
 interface OptionType {
   optionText: string;
@@ -6,7 +7,7 @@ interface OptionType {
 }
 
 interface QuestionData {
-  type: string;
+  type: "mcq" | "typing";
   questionText: string;
   marks: number;
   options?: OptionType[];
@@ -27,39 +28,25 @@ const AddEditQuestionPopup: React.FC<Props> = ({
   onSubmit,
   initialData,
 }) => {
-  const [type, setType] = useState("mcq");
-  const [questionText, setQuestionText] = useState("");
-  const [marks, setMarks] = useState(1);
-
-  const [options, setOptions] = useState<OptionType[]>([
-    { optionText: "", isCorrect: false },
-  ]);
-
-  const [allowMultiple, setAllowMultiple] = useState(false);
-
-  const [answerMinLength, setAnswerMinLength] = useState<number | null>(null);
-  const [answerMaxLength, setAnswerMaxLength] = useState<number | null>(null);
-
   const isEdit = Boolean(initialData);
+  const [type, setType] = useState<QuestionData["type"]>(initialData?.type || "mcq");
+  const [questionText, setQuestionText] = useState(initialData?.questionText || "");
+  const [marks, setMarks] = useState(initialData?.marks ?? 1);
+  const [options, setOptions] = useState<OptionType[]>(initialData?.options || [{ optionText: "", isCorrect: false }]);
+  const [allowMultiple, setAllowMultiple] = useState(
+    (initialData?.options?.filter((o) => o.isCorrect).length || 0) > 1
+  );
+  const [answerMinLength, setAnswerMinLength] = useState<number | null>(initialData?.answerMinLength ?? null);
+  const [answerMaxLength, setAnswerMaxLength] = useState<number | null>(initialData?.answerMaxLength ?? null);
 
-  useEffect(() => {
-    if (initialData) {
-      setType(initialData.type);
-      setQuestionText(initialData.questionText);
-      setMarks(initialData.marks);
-      setOptions(initialData.options || [{ optionText: "", isCorrect: false }]);
-      setAnswerMinLength(initialData.answerMinLength || null);
-      setAnswerMaxLength(initialData.answerMaxLength || null);
-
-      // auto-enable multiple checkbox if more than one correct answer exists
-      const correctCount = initialData.options?.filter((o) => o.isCorrect).length || 0;
-      setAllowMultiple(correctCount > 1);
-    }
-  }, [initialData]);
-
-  const handleOptionChange = (index: number, field: string, value: any) => {
+  const handleOptionChange = (
+    index: number,
+    field: "optionText" | "isCorrect",
+    value: string | boolean
+  ) => {
     const updated = [...options];
-    updated[index][field] = value;
+    if (field === "optionText") updated[index].optionText = String(value);
+    if (field === "isCorrect") updated[index].isCorrect = Boolean(value);
     setOptions(updated);
   };
 
@@ -94,26 +81,17 @@ const AddEditQuestionPopup: React.FC<Props> = ({
     onSubmit(payload);
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white w-[650px] max-h-[80vh] overflow-y-auto rounded-xl shadow-lg p-8 space-y-6">
-
-        <h2 className="text-2xl font-semibold">
-          {isEdit ? "Edit Question" : "Add Question"}
-        </h2>
-
+    <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? "Edit Question" : "Add Question"} size="lg">
+      <div className="space-y-6">
         {/* Question Type Tabs */}
-        <div className="flex gap-4 border-b pb-2">
+        <div className="flex gap-2 border-b pb-2">
           {["mcq", "typing"].map((t) => (
             <button
               key={t}
-              onClick={() => setType(t)}
-              className={`px-4 py-2 rounded transition-all ${
-                type === t
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-600"
+              onClick={() => setType(t as QuestionData["type"])}
+              className={`px-3 py-2 rounded-md text-sm transition ${
+                type === t ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"
               }`}
             >
               {t === "mcq" ? "MCQ" : "Typing Answer"}
@@ -155,26 +133,19 @@ const AddEditQuestionPopup: React.FC<Props> = ({
                 checked={allowMultiple}
                 onChange={(e) => setAllowMultiple(e.target.checked)}
               />
-              <span className="text-sm text-gray-700">
-                Allow multiple correct answers
-              </span>
+              <span className="text-sm text-gray-700">Allow multiple correct answers</span>
             </label>
 
             <div className="space-y-3">
               {options.map((opt, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-4 border rounded-lg p-3"
-                >
+                <div key={index} className="flex items-center gap-4 border rounded-lg p-3">
                   {/* Option text */}
                   <input
                     type="text"
                     placeholder={`Option ${index + 1}`}
                     className="flex-1 border rounded p-2"
                     value={opt.optionText}
-                    onChange={(e) =>
-                      handleOptionChange(index, "optionText", e.target.value)
-                    }
+                    onChange={(e) => handleOptionChange(index, "optionText", e.target.value)}
                   />
 
                   {/* Correct Answer Selector */}
@@ -182,13 +153,7 @@ const AddEditQuestionPopup: React.FC<Props> = ({
                     <input
                       type="checkbox"
                       checked={opt.isCorrect}
-                      onChange={(e) =>
-                        handleOptionChange(
-                          index,
-                          "isCorrect",
-                          e.target.checked
-                        )
-                      }
+                      onChange={(e) => handleOptionChange(index, "isCorrect", e.target.checked)}
                     />
                   ) : (
                     <input
@@ -201,10 +166,7 @@ const AddEditQuestionPopup: React.FC<Props> = ({
 
                   {/* Delete option */}
                   {options.length > 1 && (
-                    <button
-                      className="text-red-500"
-                      onClick={() => removeOption(index)}
-                    >
+                    <button className="text-red-500" onClick={() => removeOption(index)}>
                       ✕
                     </button>
                   )}
@@ -212,10 +174,7 @@ const AddEditQuestionPopup: React.FC<Props> = ({
               ))}
             </div>
 
-            <button
-              onClick={addOption}
-              className="text-blue-600 mt-2 hover:underline"
-            >
+            <button onClick={addOption} className="text-blue-600 mt-2 hover:underline">
               + Add Option
             </button>
           </div>
@@ -247,24 +206,17 @@ const AddEditQuestionPopup: React.FC<Props> = ({
         )}
 
         {/* Buttons */}
-        <div className="flex justify-end gap-4 pt-4">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
-          >
+        <div className="flex justify-end gap-4 pt-2">
+          <button onClick={onClose} className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
             Cancel
           </button>
 
-          <button
-            onClick={handleSubmit}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
+          <button onClick={handleSubmit} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
             {isEdit ? "Update" : "Create"}
           </button>
         </div>
-
       </div>
-    </div>
+    </Modal>
   );
 };
 

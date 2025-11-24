@@ -9,6 +9,7 @@ import { Students } from "./pages/Students";
 import Layout from "./layouts/Layout";
 import Exams from "./pages/Exams";
 import AddQuestionsPage from "./pages/AddQuestionsPage";
+import ProfilePage from "./pages/profile";
 
 
 
@@ -25,9 +26,10 @@ function App() {
         <Route path="/students" element={<Students />} />
         <Route path="/exam" element={<Exams />} />
         <Route path="/exam/:examid/questions" element={<AddQuestionsPage />} />
-
-        <Route path="/results" element={<Results />} />
+       <Route path="/results" element={<Results />} />
         <Route path="/courses" element={<Courses />} />
+         <Route path="/profile" element={<ProfilePage />} />
+        
       </Route>
     </Routes>
   );

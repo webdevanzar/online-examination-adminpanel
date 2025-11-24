@@ -151,7 +151,7 @@ export const Students: React.FC = () => {
         <UpdateUserPopup
           user={selectedUser}
           onClose={() => setSelectedUser(null)}
-          onUpdate={(data) => {
+          onUpdate={(data: Partial<User>) => {
             setUsers((prev) =>
               prev.map((u) =>
                 u.email === selectedUser.email ? { ...u, ...data } : u

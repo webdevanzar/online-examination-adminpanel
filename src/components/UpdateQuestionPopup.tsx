@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 interface OptionType {
   optionText: string;
@@ -28,35 +28,20 @@ const UpdateQuestionPopup: React.FC<Props> = ({
   onClose,
   onUpdate,
 }) => {
-  const [type, setType] = useState<"mcq" | "typing">("mcq");
-  const [questionText, setQuestionText] = useState("");
-  const [marks, setMarks] = useState(1);
-
-  const [options, setOptions] = useState<OptionType[]>([]);
-  const [allowMultiple, setAllowMultiple] = useState(false);
-
-  const [answerMinLength, setAnswerMinLength] = useState<number | null>(null);
-  const [answerMaxLength, setAnswerMaxLength] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (initialData) {
-      setType(initialData.type);
-      setQuestionText(initialData.questionText);
-      setMarks(initialData.marks);
-
-      if (initialData.type === "mcq") {
-        setOptions(initialData.options || []);
-        const correctCount =
-          initialData.options?.filter((o) => o.isCorrect).length || 0;
-        setAllowMultiple(correctCount > 1);
-      }
-
-      if (initialData.type === "typing") {
-        setAnswerMinLength(initialData.answerMinLength || null);
-        setAnswerMaxLength(initialData.answerMaxLength || null);
-      }
-    }
-  }, [initialData]);
+  const [questionText, setQuestionText] = useState(initialData?.questionText || "");
+  const [marks, setMarks] = useState(initialData?.marks || 1);
+  const [options, setOptions] = useState<OptionType[]>(initialData?.type === 'mcq' ? initialData.options || [] : []);
+  const [allowMultiple, setAllowMultiple] = useState(
+    initialData?.type === 'mcq' && initialData.options 
+      ? initialData.options.filter((o) => o.isCorrect).length > 1 
+      : false
+  );
+  const [answerMinLength, setAnswerMinLength] = useState<number | null>(
+    initialData?.type === 'typing' ? initialData.answerMinLength || null : null
+  );
+  const [answerMaxLength, setAnswerMaxLength] = useState<number | null>(
+    initialData?.type === 'typing' ? initialData.answerMaxLength || null : null
+  );
 
   const handleOptionChange = (index: number, field: string, value: any) => {
     const updated = [...options];
@@ -82,20 +67,25 @@ const UpdateQuestionPopup: React.FC<Props> = ({
     }
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = (e: React.FormEvent) => {
+    e.preventDefault();
+
     if (!initialData) return;
 
-    const updated: QuestionData = {
+    const updatedQuestion: QuestionData = {
       ...initialData,
-      type,
       questionText,
       marks,
-      options: type === "mcq" ? options : undefined,
-      answerMinLength: type === "typing" ? answerMinLength : null,
-      answerMaxLength: type === "typing" ? answerMaxLength : null,
+      ...(initialData.type === "mcq"
+        ? { options, allowMultiple }
+        : {
+            answerMinLength,
+            answerMaxLength,
+          }),
     };
 
-    onUpdate(updated);
+    onUpdate(updatedQuestion);
+    onClose();
   };
 
   if (!isOpen || !initialData) return null;
@@ -103,7 +93,6 @@ const UpdateQuestionPopup: React.FC<Props> = ({
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white w-[600px] max-h-[80vh] overflow-y-auto rounded-xl shadow-lg p-8 space-y-6">
-
         <h2 className="text-xl font-semibold">Update Question</h2>
 
         {/* Question Text */}
@@ -128,10 +117,15 @@ const UpdateQuestionPopup: React.FC<Props> = ({
           />
         </div>
 
-        {/* ======================
-            MCQ UPDATE SECTION
-        ======================= */}
-        {type === "mcq" && (
+        {/* Question Type Display */}
+        <div className="space-y-4">
+          <h3 className="font-medium text-lg">
+            Question Type: <span className="capitalize">{initialData.type}</span>
+          </h3>
+        </div>
+
+        {/* MCQ Options Section */}
+        {initialData.type === "mcq" && (
           <div className="space-y-4">
             <h3 className="font-medium text-lg">MCQ Options</h3>
 
@@ -198,10 +192,8 @@ const UpdateQuestionPopup: React.FC<Props> = ({
           </div>
         )}
 
-        {/* ======================
-            TYPING QUESTION UPDATE SECTION
-        ======================= */}
-        {type === "typing" && (
+        {/* Typing Answer Section */}
+        {initialData.type === "typing" && (
           <div className="space-y-4">
             <h3 className="font-medium text-lg">Typing Answer Settings</h3>
 

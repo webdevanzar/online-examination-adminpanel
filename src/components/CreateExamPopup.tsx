@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 const CreateExamPopup = ({ onClose, onSave }) => {
   const [form, setForm] = useState({

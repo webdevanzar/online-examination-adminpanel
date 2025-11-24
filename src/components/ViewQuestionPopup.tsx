@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Modal from "./Modal";
+import UpdateQuestionPopup from "./UpdateQuestionPopup";
 
 interface OptionType {
   optionText: string;
@@ -24,201 +25,158 @@ interface Props {
   onDelete: (order: number) => void;
 }
 
-const ViewQuestionPopup: React.FC<Props> = ({ isOpen, question, onClose, onUpdate, onDelete }) => {
-  const [editMode, setEditMode] = useState(false);
-
-  const [type, setType] = useState<QuestionViewData["type"]>("mcq");
-  const [questionText, setQuestionText] = useState("");
-  const [marks, setMarks] = useState(1);
-  const [options, setOptions] = useState<OptionType[]>([{ optionText: "", isCorrect: false }]);
-  const [answerMinLength, setAnswerMinLength] = useState<number | undefined>(undefined);
-  const [answerMaxLength, setAnswerMaxLength] = useState<number | undefined>(undefined);
-
-  const startEdit = () => {
-    if (!question) return;
-    setType(question.type);
-    setQuestionText(question.questionText);
-    setMarks(question.marks);
-    setOptions(question.options || [{ optionText: "", isCorrect: false }]);
-    setAnswerMinLength(question.answerMinLength);
-    setAnswerMaxLength(question.answerMaxLength);
-    setEditMode(true);
-  };
+const ViewQuestionPopup: React.FC<Props> = ({
+  isOpen,
+  question,
+  onClose,
+  onUpdate,
+  onDelete,
+}) => {
+  const [isUpdateOpen, setIsUpdateOpen] = useState(false);
 
   const handleClose = () => {
-    setEditMode(false);
     onClose();
-  };
-
-  const handleOptionChange = (index: number, field: "optionText" | "isCorrect", value: string | boolean) => {
-    const updated = [...options];
-    if (field === "optionText") updated[index].optionText = String(value);
-    if (field === "isCorrect") updated[index].isCorrect = Boolean(value);
-    setOptions(updated);
-  };
-
-  const handleSingleCorrect = (index: number) => {
-    const updated = options.map((opt, i) => ({ ...opt, isCorrect: i === index }));
-    setOptions(updated);
-  };
-
-  const addOption = () => setOptions((prev) => [...prev, { optionText: "", isCorrect: false }]);
-  const removeOption = (index: number) => {
-    if (options.length > 1) setOptions(options.filter((_, i) => i !== index));
-  };
-
-  const handleSave = () => {
-    if (!question) return;
-    onUpdate({
-      order: question.order,
-      type,
-      questionText,
-      marks,
-      options: type === "mcq" ? options : undefined,
-      answerMinLength: type === "typing" ? answerMinLength : undefined,
-      answerMaxLength: type === "typing" ? answerMaxLength : undefined,
-    });
-    setEditMode(false);
   };
 
   const handleDelete = () => {
     if (!question) return;
-    onDelete(question.order);
+    if (window.confirm("Are you sure you want to delete this question?")) {
+      onDelete(question.order);
+      onClose();
+    }
   };
 
+  if (!question) return null;
+
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title={editMode ? "Edit Question" : "Question Details"} size="lg">
-      {!question ? null : (
-        <div className="space-y-6">
-          {/* Toggle edit */}
-          <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-500">Order #{question.order}</p>
-            <div className="flex gap-2">
-              {!editMode && (
-                <button onClick={startEdit} className="px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">Edit</button>
-              )}
-              <button onClick={handleDelete} className="px-3 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600">Delete</button>
-            </div>
-          </div>
+    <>
+      <Modal title="Question" isOpen={isOpen} onClose={handleClose}>
+        <div className="p-6 w-full max-w-2xl">
+          <h2 className="text-2xl font-bold mb-6">Question {question.order}</h2>
 
-          {/* Type Tabs (edit mode only) */}
-          {editMode ? (
-            <div className="flex gap-2 border-b pb-2">
-              {["mcq", "typing"].map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setType(t as QuestionViewData["type"])}
-                  className={`px-3 py-2 rounded-md text-sm transition ${type === t ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"}`}
-                >
-                  {t === "mcq" ? "MCQ" : "Typing Answer"}
-                </button>
-              ))}
-            </div>
-          ) : (
+          <div className="space-y-6">
             <div>
-              <span className="inline-flex items-center px-2 py-1 text-xs rounded bg-blue-50 text-blue-700 border border-blue-100">{question.type.toUpperCase()}</span>
+              <h3 className="font-semibold text-gray-700 mb-1">Question:</h3>
+              <p className="text-gray-800">{question.questionText}</p>
             </div>
-          )}
 
-          {/* Question text */}
-          <div className="space-y-2">
-            <label className="font-medium">Question</label>
-            {editMode ? (
-              <textarea className="w-full border rounded-lg p-3" rows={3} value={questionText} onChange={(e) => setQuestionText(e.target.value)} />
-            ) : (
-              <p className="text-gray-800 leading-relaxed">{question.questionText}</p>
-            )}
-          </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h3 className="font-semibold text-gray-700 mb-1">Type:</h3>
+                <p className="capitalize">{question.type}</p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-700 mb-1">Marks:</h3>
+                <p>{question.marks}</p>
+              </div>
+            </div>
 
-          {/* Marks */}
-          <div className="space-y-2">
-            <label className="font-medium">Marks</label>
-            {editMode ? (
-              <input type="number" className="w-full border rounded-lg p-3" value={marks} onChange={(e) => setMarks(Number(e.target.value))} />
-            ) : (
-              <p className="text-gray-700">{question.marks}</p>
-            )}
-          </div>
-
-          {/* Type-specific content */}
-          {(editMode ? type : question.type) === "mcq" ? (
-            <div className="space-y-3">
-              <h3 className="font-medium text-lg">Options</h3>
-              {editMode && (
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <span className="text-sm text-gray-700">Allow multiple correct answers</span>
-                </label>
-              )}
-              <div className="space-y-3">
-                {(editMode ? options : (question.options || [])).map((opt, index) => (
-                  <div key={index} className="flex items-center gap-4 border rounded-lg p-3">
-                    {editMode ? (
-                      <>
-                        <input
-                          type="text"
-                          placeholder={`Option ${index + 1}`}
-                          className="flex-1 border rounded p-2"
-                          value={opt.optionText}
-                          onChange={(e) => handleOptionChange(index, "optionText", e.target.value)}
-                        />
-                        <input
-                          type="radio"
-                          name="correctAnswer"
-                          checked={opt.isCorrect}
-                          onChange={() => handleSingleCorrect(index)}
-                        />
-                        {options.length > 1 && (
-                          <button className="text-red-500" onClick={() => removeOption(index)}>✕</button>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        <div className="flex-1">
-                          <p className="text-gray-800">{opt.optionText || `Option ${index + 1}`}</p>
-                        </div>
+            {question.type === "mcq" && question.options && (
+              <div>
+                <h3 className="font-semibold text-gray-700 mb-2">Options:</h3>
+                <ul className="space-y-2">
+                  {question.options.map((opt, i) => (
+                    <li
+                      key={i}
+                      className={`p-3 border rounded ${
+                        opt.isCorrect
+                          ? "border-green-300 bg-green-50"
+                          : "border-gray-200"
+                      }`}
+                    >
+                      <div className="flex items-start">
+                        <span className="font-medium mr-2">
+                          {String.fromCharCode(65 + i)}.
+                        </span>
+                        <span
+                          className={
+                            opt.isCorrect ? "text-green-700 font-medium" : ""
+                          }
+                        >
+                          {opt.optionText}
+                        </span>
                         {opt.isCorrect && (
-                          <span className="text-xs px-2 py-1 rounded bg-green-50 text-green-700 border border-green-200">Correct</span>
+                          <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">
+                            Correct Answer
+                          </span>
                         )}
-                      </>
-                    )}
-                  </div>
-                ))}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              {editMode && (
-                <button onClick={addOption} className="text-blue-600 mt-2 hover:underline">+ Add Option</button>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="font-medium">Minimum Answer Length</label>
-                {editMode ? (
-                  <input type="number" className="w-full border rounded-lg p-3" value={answerMinLength ?? ""} onChange={(e) => setAnswerMinLength(Number(e.target.value))} />
-                ) : (
-                  <p className="text-gray-700">{question.answerMinLength ?? "—"}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <label className="font-medium">Maximum Answer Length</label>
-                {editMode ? (
-                  <input type="number" className="w-full border rounded-lg p-3" value={answerMaxLength ?? ""} onChange={(e) => setAnswerMaxLength(Number(e.target.value))} />
-                ) : (
-                  <p className="text-gray-700">{question.answerMaxLength ?? "—"}</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Footer actions */}
-          <div className="flex justify-end gap-2 pt-2">
-            <button onClick={handleClose} className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Close</button>
-            {editMode && (
-              <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Changes</button>
             )}
+
+            {question.type === "typing" && (
+              <div className="bg-gray-50 p-4 rounded">
+                <h3 className="font-semibold text-gray-700 mb-2">
+                  Answer Requirements:
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-sm text-gray-600">
+                      Minimum length:
+                    </span>
+                    <p className="font-medium">
+                      {question.answerMinLength || "Not specified"}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-600">
+                      Maximum length:
+                    </span>
+                    <p className="font-medium">
+                      {question.answerMaxLength || "Not specified"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+              <button
+                onClick={() => {
+                  setIsUpdateOpen(true);
+                  handleClose();
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                Edit 
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              >
+                Delete
+              </button>
+              <button
+                onClick={handleClose}
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
+      </Modal>
+
+      {isUpdateOpen && question && (
+        <UpdateQuestionPopup
+          isOpen={isUpdateOpen}
+          initialData={{
+            ...question,
+            options: question.options || [],
+            answerMinLength: question.answerMinLength || undefined,
+            answerMaxLength: question.answerMaxLength || undefined,
+          }}
+          onClose={() => setIsUpdateOpen(false)}
+          onUpdate={(updated) => {
+            onUpdate(updated as QuestionViewData);
+            setIsUpdateOpen(false);
+          }}
+        />
       )}
-    </Modal>
+    </>
   );
 };
 

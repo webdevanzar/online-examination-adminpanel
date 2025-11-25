@@ -1,6 +1,8 @@
 import { Menu, Search, UserCircle2, LogOut, User } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAdminLogout } from "../services/auth";
+import { toast } from "sonner";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -8,12 +10,29 @@ interface HeaderProps {
   onSearch?: (value: string) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onMenuClick, placeholder = "Search...", onSearch }) => {
+const Header: React.FC<HeaderProps> = ({
+  onMenuClick,
+  placeholder = "Search...",
+  onSearch,
+}) => {
   const [value, setValue] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
+  const { mutate: logout, isPending } = useAdminLogout();
+
+  const handleLogout = () => {
+    logout(undefined, {
+      onSuccess: () => {
+        toast.success("Logged out");
+        navigate("/login");
+      },
+      onError: () => {
+        toast.error("Failed to logout");
+      },
+    });
+  };
   const handleChange = (v: string) => {
     setValue(v);
     onSearch?.(v);
@@ -22,14 +41,17 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, placeholder = "Search...",
   // Close popup when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(event.target as Node)
+      ) {
         setIsProfileOpen(false);
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -50,7 +72,10 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, placeholder = "Search...",
 
         <div className="flex-1 max-w-2xl w-full">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              size={18}
+            />
             <input
               value={value}
               onChange={(e) => handleChange(e.target.value)}
@@ -62,16 +87,15 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, placeholder = "Search...",
         </div>
 
         <div className="flex items-center gap-3 relative" ref={profileRef}>
-          <div 
+          <div
             onClick={toggleProfile}
             className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 cursor-pointer transition-colors"
           >
             <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center">
               <UserCircle2 size={24} />
             </div>
-            
           </div>
-          
+
           {/* Profile Dropdown */}
           {isProfileOpen && (
             <div className="absolute right-0 top-14 w-72 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-50">
@@ -87,25 +111,25 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, placeholder = "Search...",
                 </div>
               </div>
               <div className="p-2">
-                <button 
+                <button
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors"
                   onClick={() => {
                     setIsProfileOpen(false);
-                    navigate('/profile');
+                    navigate("/profile");
                   }}
                 >
                   <User size={18} className="text-blue-500" />
                   View Profile
                 </button>
-                <button 
+                <button
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors"
                   onClick={() => {
-                    // Handle logout
+                    handleLogout();
                     setIsProfileOpen(false);
                   }}
                 >
                   <LogOut size={18} className="text-red-500" />
-                  Logout
+                  {isPending ? "Logging out..." : "Logout"}
                 </button>
               </div>
             </div>

@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+import { InputField } from "./InputField";
 
 interface OptionType {
   optionText: string;
@@ -29,7 +31,11 @@ const UpdateQuestionPopup: React.FC<Props> = ({
   onUpdate,
 }) => {
   const [questionText, setQuestionText] = useState(initialData?.questionText || "");
-  const [marks, setMarks] = useState(initialData?.marks || 1);
+  type FormValues = { marks: number };
+  const methods = useForm<FormValues>({
+    mode: "onTouched",
+    defaultValues: { marks: initialData?.marks || 1 },
+  });
   const [options, setOptions] = useState<OptionType[]>(initialData?.type === 'mcq' ? initialData.options || [] : []);
   const [allowMultiple, setAllowMultiple] = useState(
     initialData?.type === 'mcq' && initialData.options 
@@ -43,9 +49,15 @@ const UpdateQuestionPopup: React.FC<Props> = ({
     initialData?.type === 'typing' ? initialData.answerMaxLength || null : null
   );
 
-  const handleOptionChange = (index: number, field: string, value: any) => {
+  const handleOptionChange = (
+    index: number,
+    field: keyof OptionType,
+    value: string | boolean
+  ) => {
     const updated = [...options];
-    updated[index][field] = value;
+    // Ensure correct types
+    if (field === "optionText") updated[index].optionText = String(value);
+    if (field === "isCorrect") updated[index].isCorrect = Boolean(value);
     setOptions(updated);
   };
 
@@ -72,10 +84,11 @@ const UpdateQuestionPopup: React.FC<Props> = ({
 
     if (!initialData) return;
 
+    const { marks } = methods.getValues();
     const updatedQuestion: QuestionData = {
       ...initialData,
       questionText,
-      marks,
+      marks: Number(marks),
       ...(initialData.type === "mcq"
         ? { options, allowMultiple }
         : {
@@ -94,6 +107,7 @@ const UpdateQuestionPopup: React.FC<Props> = ({
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white w-[600px] max-h-[80vh] overflow-y-auto rounded-xl shadow-lg p-8 space-y-6">
         <h2 className="text-xl font-semibold">Update Question</h2>
+        <FormProvider {...methods}>
 
         {/* Question Text */}
         <div className="space-y-2">
@@ -109,11 +123,12 @@ const UpdateQuestionPopup: React.FC<Props> = ({
         {/* Marks */}
         <div className="space-y-2">
           <label className="font-medium">Marks</label>
-          <input
+          <InputField
+            name={"marks"}
+            label=""
             type="number"
-            className="w-full border rounded-lg p-3"
-            value={marks}
-            onChange={(e) => setMarks(Number(e.target.value))}
+            placeholder="Marks"
+            rules={{ required: "Marks is required" }}
           />
         </div>
 
@@ -235,6 +250,7 @@ const UpdateQuestionPopup: React.FC<Props> = ({
             Update
           </button>
         </div>
+        </FormProvider>
       </div>
     </div>
   );

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import Modal from "./Modal";
+import { FormProvider, useForm } from "react-hook-form";
+import { InputField } from "./InputField";
 
 interface OptionType {
   optionText: string;
@@ -31,13 +33,18 @@ const AddEditQuestionPopup: React.FC<Props> = ({
   const isEdit = Boolean(initialData);
   const [type, setType] = useState<QuestionData["type"]>(initialData?.type || "mcq");
   const [questionText, setQuestionText] = useState(initialData?.questionText || "");
-  const [marks, setMarks] = useState(initialData?.marks ?? 1);
   const [options, setOptions] = useState<OptionType[]>(initialData?.options || [{ optionText: "", isCorrect: false }]);
   const [allowMultiple, setAllowMultiple] = useState(
     (initialData?.options?.filter((o) => o.isCorrect).length || 0) > 1
   );
   const [answerMinLength, setAnswerMinLength] = useState<number | null>(initialData?.answerMinLength ?? null);
   const [answerMaxLength, setAnswerMaxLength] = useState<number | null>(initialData?.answerMaxLength ?? null);
+
+  type FormValues = { marks: number };
+  const methods = useForm<FormValues>({
+    mode: "onTouched",
+    defaultValues: { marks: initialData?.marks ?? 1 },
+  });
 
   const handleOptionChange = (
     index: number,
@@ -69,10 +76,11 @@ const AddEditQuestionPopup: React.FC<Props> = ({
   };
 
   const handleSubmit = () => {
+    const { marks } = methods.getValues();
     const payload: QuestionData = {
       type,
       questionText,
-      marks,
+      marks: Number(marks),
       options: type === "mcq" ? options : undefined,
       answerMinLength: type === "typing" ? answerMinLength : null,
       answerMaxLength: type === "typing" ? answerMaxLength : null,
@@ -84,6 +92,7 @@ const AddEditQuestionPopup: React.FC<Props> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? "Edit Question" : "Add Question"} size="lg">
       <div className="space-y-6">
+        <FormProvider {...methods}>
         {/* Question Type Tabs */}
         <div className="flex gap-2 border-b pb-2">
           {["mcq", "typing"].map((t) => (
@@ -113,11 +122,13 @@ const AddEditQuestionPopup: React.FC<Props> = ({
         {/* Marks */}
         <div className="space-y-2">
           <label className="font-medium">Marks</label>
-          <input
+          <InputField
+            name={"marks"}
+            label=""
             type="number"
-            className="w-full border rounded-lg p-3"
-            value={marks}
-            onChange={(e) => setMarks(Number(e.target.value))}
+            placeholder="Marks"
+            rules={{ required: "Marks is required" }}
+            className=""
           />
         </div>
 
@@ -215,6 +226,7 @@ const AddEditQuestionPopup: React.FC<Props> = ({
             {isEdit ? "Update" : "Create"}
           </button>
         </div>
+        </FormProvider>
       </div>
     </Modal>
   );

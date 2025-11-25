@@ -1,6 +1,35 @@
 import { useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+import { InputField } from "./InputField";
 
-const CreateExamPopup = ({ onClose, onSave }) => {
+interface CreateExamPopupProps {
+  onClose: () => void;
+  onSave: (data: CreateExamData) => void;
+}
+
+interface CreateExamData {
+  title: string;
+  description: string;
+  subject: string;
+  instructions: string;
+  startTime: string;
+  endTime: string;
+  duration: string | number;
+  totalMarks: string | number;
+  passingMarks: string | number;
+  microphoneRequired: boolean;
+  faceDetectionRequired: boolean;
+  // Question settings kept as-is in local state (not validated here)
+  questionText: string;
+  marks: string | number;
+  type: string;
+  hasMultipleCorrect: boolean;
+  answerMinLength: string | number;
+  answerMaxLength: string | number;
+  options: { text: string; isCorrect: boolean }[];
+}
+
+const CreateExamPopup = ({ onClose, onSave }: CreateExamPopupProps) => {
   const [form, setForm] = useState({
     // Exam Fields
     title: "",
@@ -34,19 +63,45 @@ const CreateExamPopup = ({ onClose, onSave }) => {
     ],
   });
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm({
-      ...form,
-      [name]: type === "checkbox" ? checked : value,
-    });
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const target = e.target;
+    const name = target.name as keyof CreateExamData;
+    const value = ((): string | number | boolean => {
+      if (target instanceof HTMLInputElement && target.type === "checkbox") {
+        return target.checked;
+      }
+      return target.value;
+    })();
+    setForm(prev => ({
+      ...prev,
+      [name]: value as CreateExamData[typeof name],
+    }));
   };
 
-  const handleOptionChange = (index, field, value) => {
-    const updated = [...form.options];
-    updated[index][field] = value;
-    setForm({ ...form, options: updated });
+  type ExamFormValues = {
+    title: string;
+    subject: string;
+    totalMarks: string | number;
+    passingMarks: string | number;
+    startTime: string;
+    endTime: string;
+    duration: string | number;
   };
+
+  const methods = useForm<ExamFormValues>({
+    mode: "onTouched",
+    defaultValues: {
+      title: form.title,
+      subject: form.subject,
+      totalMarks: form.totalMarks,
+      passingMarks: form.passingMarks,
+      startTime: form.startTime,
+      endTime: form.endTime,
+      duration: form.duration,
+    },
+  });
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -62,70 +117,63 @@ const CreateExamPopup = ({ onClose, onSave }) => {
 
         {/* ---------------- EXAM FIELDS ---------------- */}
         <h3 className="font-semibold text-lg mb-2">Exam Details</h3>
+        <FormProvider {...methods}>
+          <div className="grid grid-cols-2 gap-4">
+            <InputField
+              name={"title"}
+              label="Title"
+              placeholder="Exam Title"
+              rules={{ required: "Title is required" }}
+            />
 
-        <div className="grid grid-cols-2 gap-4">
+            <InputField
+              name={"subject"}
+              label="Subject"
+              placeholder="Subject"
+              rules={{ required: "Subject is required" }}
+            />
 
-          <input
-            type="text"
-            name="title"
-            placeholder="Exam Title"
-            value={form.title}
-            onChange={handleChange}
-            className="border p-2 rounded-lg"
-          />
+            <InputField
+              name={"totalMarks"}
+              label="Total Marks"
+              type="number"
+              placeholder="Total Marks"
+              rules={{ required: "Total marks is required" }}
+            />
 
-          <input
-            type="text"
-            name="subject"
-            placeholder="Subject"
-            value={form.subject}
-            onChange={handleChange}
-            className="border p-2 rounded-lg"
-          />
+            <InputField
+              name={"passingMarks"}
+              label="Passing Marks"
+              type="number"
+              placeholder="Passing Marks"
+              rules={{ required: "Passing marks is required" }}
+            />
 
-          <input
-            type="number"
-            name="totalMarks"
-            placeholder="Total Marks"
-            value={form.totalMarks}
-            onChange={handleChange}
-            className="border p-2 rounded-lg"
-          />
+            <InputField
+              name={"startTime"}
+              label="Start Time"
+              type="datetime-local"
+              placeholder="Start"
+              rules={{ required: "Start time is required" }}
+            />
 
-          <input
-            type="number"
-            name="passingMarks"
-            placeholder="Passing Marks"
-            value={form.passingMarks}
-            onChange={handleChange}
-            className="border p-2 rounded-lg"
-          />
+            <InputField
+              name={"endTime"}
+              label="End Time"
+              type="datetime-local"
+              placeholder="End"
+              rules={{ required: "End time is required" }}
+            />
 
-          <input
-            type="datetime-local"
-            name="startTime"
-            value={form.startTime}
-            onChange={handleChange}
-            className="border p-2 rounded-lg"
-          />
-
-          <input
-            type="datetime-local"
-            name="endTime"
-            value={form.endTime}
-            onChange={handleChange}
-            className="border p-2 rounded-lg"
-          />
-
-          <input
-            type="number"
-            name="duration"
-            placeholder="Duration (Minutes)"
-            value={form.duration}
-            onChange={handleChange}
-            className="border p-2 rounded-lg"
-          />
-        </div>
+            <InputField
+              name={"duration"}
+              label="Duration (Minutes)"
+              type="number"
+              placeholder="Duration"
+              rules={{ required: "Duration is required" }}
+            />
+          </div>
+        </FormProvider>
 
         <textarea
           name="description"
@@ -173,7 +221,10 @@ const CreateExamPopup = ({ onClose, onSave }) => {
           </button>
 
           <button
-            onClick={() => onSave(form)}
+            onClick={() => {
+              const values = methods.getValues();
+              onSave({ ...form, ...values });
+            }}
             className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             Save Exam

@@ -1,26 +1,50 @@
 import  { useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+import { InputField } from "./InputField";
 
-const UpdateUserPopup = ({ user, onClose, onUpdate }) => {
-  const [formData, setFormData] = useState({
+interface UserData {
+  username: string;
+  email: string;
+  phone: string;
+  profile: string | File;
+}
+
+interface UpdateUserPopupProps {
+  user: UserData;
+  onClose: () => void;
+  onUpdate: (data: UserData) => void;
+}
+
+const UpdateUserPopup = ({ user, onClose, onUpdate }: UpdateUserPopupProps) => {
+  const [formData, setFormData] = useState<UserData>({
     username: user.username,
     email: user.email,
     phone: user.phone,
     profile: user.profile,
   });
 
-  const [preview, setPreview] = useState(user.profile);
+  const [preview, setPreview] = useState<string>(
+    typeof user.profile === "string" ? user.profile : ""
+  );
 
-  // Handle Input Change
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  type FormValues = {
+    username: string;
+    email: string;
+    phone: string;
   };
 
+  const methods = useForm<FormValues>({
+    mode: "onTouched",
+    defaultValues: {
+      username: user.username,
+      email: user.email,
+      phone: user.phone,
+    },
+  });
+
   // Handle Image Upload
-  const handleImage = (e) => {
-    const file = e.target.files[0];
+  const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file) {
       setFormData({ ...formData, profile: file });
       setPreview(URL.createObjectURL(file));
@@ -45,40 +69,31 @@ const UpdateUserPopup = ({ user, onClose, onUpdate }) => {
         </div>
 
         {/* Inputs */}
-        <div className="grid gap-3">
-          <div>
-            <label className="font-semibold">Username</label>
-            <input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-lg"
+        <FormProvider {...methods}>
+          <div className="grid gap-3">
+            <InputField
+              name={"username"}
+              label="Username"
+              placeholder="Username"
+              rules={{ required: "Username is required" }}
             />
-          </div>
 
-          <div>
-            <label className="font-semibold">Email</label>
-            <input
+            <InputField
+              name={"email"}
+              label="Email"
               type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-lg"
+              placeholder="Email"
+              rules={{ required: "Email is required" }}
             />
-          </div>
 
-          <div>
-            <label className="font-semibold">Phone Number</label>
-            <input
-              type="text"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-lg"
+            <InputField
+              name={"phone"}
+              label="Phone Number"
+              placeholder="Phone"
+              rules={{ required: "Phone is required" }}
             />
           </div>
-        </div>
+        </FormProvider>
 
         {/* Buttons */}
         <div className="flex justify-between mt-6">
@@ -90,7 +105,10 @@ const UpdateUserPopup = ({ user, onClose, onUpdate }) => {
           </button>
 
           <button
-            onClick={() => onUpdate(formData)}
+            onClick={() => {
+              const values = methods.getValues();
+              onUpdate({ ...formData, ...values });
+            }}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             Update

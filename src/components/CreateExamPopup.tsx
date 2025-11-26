@@ -221,8 +221,42 @@ const CreateExamPopup = ({ onClose, onSave }: CreateExamPopupProps) => {
           </button>
 
           <button
-            onClick={() => {
+            onClick={async () => {
+              // Trigger form validation
+              const isValid = await methods.trigger();
+
+              if (!isValid) {
+                return; // Don't submit if form is invalid
+              }
+
+              // Additional validation
+              if (!form.description.trim()) {
+                alert("Please enter exam description");
+                return;
+              }
+
               const values = methods.getValues();
+              const totalMarks = Number(values.totalMarks);
+              const passingMarks = Number(values.passingMarks);
+
+              if (passingMarks > totalMarks) {
+                alert("Passing marks cannot be greater than total marks");
+                return;
+              }
+
+              const startTime = new Date(values.startTime);
+              const endTime = new Date(values.endTime);
+
+              if (endTime <= startTime) {
+                alert("End time must be after start time");
+                return;
+              }
+
+              if (startTime < new Date()) {
+                alert("Start time cannot be in the past");
+                return;
+              }
+
               onSave({ ...form, ...values });
             }}
             className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"

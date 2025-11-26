@@ -1,66 +1,206 @@
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Users, FileCheck, Clock, TrendingUp } from "lucide-react";
+import { useGetAllExams } from "../services/exam";
+import { useGetAllStudents } from "../services/student";
+import { formatRelativeDate } from "../utils/helpers";
+import { useNavigate } from "react-router-dom";
 
 export const Dashboard = () => {
+  const navigate = useNavigate();
+  const { data: exams, isLoading: examsLoading, error: examsError } = useGetAllExams();
+  const { data: students, isLoading: studentsLoading, error: studentsError } = useGetAllStudents();
+
+  const now = new Date();
+
+  // Calculate stats
+  const totalStudents = students?.length || 0;
+  const totalExams = exams?.length || 0;
+  const activeExams = exams?.filter(
+    (exam) => new Date(exam.startTime) <= now && new Date(exam.endTime) >= now
+  ).length || 0;
+
+  // Get upcoming exams (sorted by start time)
+  const upcomingExams = exams
+    ?.filter((exam) => new Date(exam.startTime) > now)
+    ?.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
+    ?.slice(0, 5) || [];
+
+  // Recent exams (created recently)
+  const recentExams = exams
+    ?.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    ?.slice(0, 5) || [];
+
+  const isLoading = examsLoading || studentsLoading;
+  const hasError = examsError || studentsError;
+
   return (
-    <div>
-      <h2 className="text-3xl font-semibold mb-6">Overview</h2>
+    <div className="animate-fadeIn">
+      {/* Header */}
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-gray-900">Overview</h2>
+        <p className="text-gray-500 text-sm mt-1">Welcome back! Here's what's happening</p>
+      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500">
-          <p className="text-gray-600">TOTAL STUDENTS</p>
-          <h3 className="text-3xl font-bold">12,500</h3>
-        </div>
+        {/* Total Students */}
+        <button
+          onClick={() => navigate("/students")}
+          className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md hover:border-blue-300 transition-all duration-200 text-left group"
+        >
+          {isLoading ? (
+            <div className="animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
+              <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-gray-500 text-sm font-medium">TOTAL STUDENTS</p>
+                <Users className="text-blue-500" size={20} />
+              </div>
+              <h3 className="text-3xl font-bold text-gray-900">{totalStudents.toLocaleString()}</h3>
+            </>
+          )}
+        </button>
 
-        <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500">
-          <p className="text-gray-600">TOTAL EXAMS</p>
-          <h3 className="text-3xl font-bold">450</h3>
-        </div>
+        {/* Total Exams */}
+        <button
+          onClick={() => navigate("/exam")}
+          className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md hover:border-blue-300 transition-all duration-200 text-left group"
+        >
+          {isLoading ? (
+            <div className="animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
+              <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-gray-500 text-sm font-medium">TOTAL EXAMS</p>
+                <FileCheck className="text-blue-500" size={20} />
+              </div>
+              <h3 className="text-3xl font-bold text-gray-900">{totalExams.toLocaleString()}</h3>
+            </>
+          )}
+        </button>
 
-        <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500">
-          <p className="text-gray-600">EXAMS IN PROGRESS</p>
-          <h3 className="text-3xl font-bold">15</h3>
-        </div>
+        {/* Active Exams */}
+        <button
+          onClick={() => navigate("/exam")}
+          className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md hover:border-green-300 transition-all duration-200 text-left group"
+        >
+          {isLoading ? (
+            <div className="animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
+              <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-gray-500 text-sm font-medium">ACTIVE EXAMS</p>
+                <Clock className="text-green-500" size={20} />
+              </div>
+              <h3 className="text-3xl font-bold text-gray-900">{activeExams}</h3>
+            </>
+          )}
+        </button>
       </div>
+
+      {/* Error State */}
+      {hasError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <p className="text-red-800 text-sm">
+            Failed to load dashboard data. Please try refreshing the page.
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Activities */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-md">
-          <h4 className="text-xl font-semibold mb-4">Recent Activities</h4>
+        <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp className="text-blue-500" size={20} />
+            <h4 className="text-xl font-semibold text-gray-900">Recent Activities</h4>
+          </div>
 
-          <ul className="space-y-3 text-gray-700">
-            <li className="flex items-center gap-3">
-              <CheckCircle className="text-blue-600" size={20} />
-              John Doe started "Calculus History Final"
-            </li>
-
-            <li className="flex items-center gap-3">
-              <CheckCircle className="text-blue-600" size={20} />
-              New exam "Physics II" created by Admin
-            </li>
-
-            <li className="flex items-center gap-3">
-              <CheckCircle className="text-blue-600" size={20} />
-              Result for "Chemistry Quiz" released
-            </li>
-          </ul>
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="animate-pulse flex items-center gap-3">
+                  <div className="w-5 h-5 bg-gray-200 rounded-full"></div>
+                  <div className="flex-1 h-4 bg-gray-200 rounded"></div>
+                </div>
+              ))}
+            </div>
+          ) : recentExams.length > 0 ? (
+            <ul className="space-y-3">
+              {recentExams.map((exam) => (
+                <li
+                  key={exam.id}
+                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                >
+                  <CheckCircle className="text-blue-500 shrink-0 mt-0.5" size={18} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-gray-900 font-medium truncate">
+                      New exam "{exam.title}" created
+                    </p>
+                    <p className="text-gray-500 text-sm">
+                      {formatRelativeDate(exam.createdAt)}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-center py-8">
+              <FileCheck className="mx-auto text-gray-300 mb-2" size={48} />
+              <p className="text-gray-500 text-sm">No recent activities</p>
+            </div>
+          )}
         </div>
 
         {/* Upcoming Exams */}
-        <div className="bg-white p-6 rounded-xl shadow-md">
-          <h4 className="text-xl font-semibold mb-4">Upcoming Exams</h4>
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center gap-2 mb-4">
+            <Clock className="text-blue-500" size={20} />
+            <h4 className="text-xl font-semibold text-gray-900">Upcoming Exams</h4>
+          </div>
 
-          <ul className="space-y-4 text-gray-700">
-            <li>
-              <p className="font-medium">Algebra II Quiz</p>
-              <p className="text-sm text-gray-500">Oct 15, 2023</p>
-            </li>
-
-            <li>
-              <p className="font-medium">Biology Final</p>
-              <p className="text-sm text-gray-500">Dec 15, 2023</p>
-            </li>
-          </ul>
+          {isLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              ))}
+            </div>
+          ) : upcomingExams.length > 0 ? (
+            <ul className="space-y-4">
+              {upcomingExams.map((exam) => (
+                <li
+                  key={exam.id}
+                  className="p-3 rounded-lg hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+                  onClick={() => navigate(`/exam/${exam.id}/questions`)}
+                >
+                  <p className="font-medium text-gray-900 truncate">{exam.title}</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {formatRelativeDate(exam.startTime)}
+                  </p>
+                  {exam.subject && (
+                    <span className="inline-block mt-2 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                      {exam.subject}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-center py-8">
+              <Clock className="mx-auto text-gray-300 mb-2" size={48} />
+              <p className="text-gray-500 text-sm">No upcoming exams</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

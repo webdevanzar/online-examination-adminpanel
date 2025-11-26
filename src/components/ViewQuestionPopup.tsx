@@ -8,6 +8,7 @@ interface OptionType {
 }
 
 export interface QuestionViewData {
+  id?: string;
   order: number;
   type: "typing" | "mcq";
   questionText: string;
@@ -165,6 +166,7 @@ const ViewQuestionPopup: React.FC<Props> = ({
           isOpen={isUpdateOpen}
           initialData={{
             ...question,
+            id: question.id,
             options: question.options || [],
             answerMinLength: question.answerMinLength || undefined,
             answerMaxLength: question.answerMaxLength || undefined,

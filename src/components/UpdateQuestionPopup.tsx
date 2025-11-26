@@ -79,14 +79,48 @@ const UpdateQuestionPopup: React.FC<Props> = ({
     }
   };
 
-  const handleUpdate = (e: React.FormEvent) => {
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!initialData) return;
 
+    // Trigger form validation
+    const isValid = await methods.trigger();
+
+    if (!isValid) {
+      return; // Don't submit if form is invalid
+    }
+
+    // Validate question text
+    if (!questionText.trim()) {
+      alert("Please enter question text");
+      return;
+    }
+
+    // Validate MCQ options
+    if (initialData.type === "mcq") {
+      if (options.length < 2) {
+        alert("Please add at least 2 options for MCQ");
+        return;
+      }
+
+      const hasEmptyOption = options.some(opt => !opt.optionText.trim());
+      if (hasEmptyOption) {
+        alert("All options must have text");
+        return;
+      }
+
+      const hasCorrectAnswer = options.some(opt => opt.isCorrect);
+      if (!hasCorrectAnswer) {
+        alert("Please select at least one correct answer");
+        return;
+      }
+    }
+
     const { marks } = methods.getValues();
     const updatedQuestion: QuestionData = {
       ...initialData,
+      id: initialData.id, // Preserve the question ID
       questionText,
       marks: Number(marks),
       ...(initialData.type === "mcq"

@@ -3,7 +3,11 @@ import type { AppDispatch } from "../store";
 import { axiosInstance } from "../utils/intercepotor";
 import { useMutation } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
-import { loginSuccess, logoutSuccess } from "../store/slice/authSlice";
+import {
+  loginSuccess,
+  logoutSuccess,
+  updateProfile,
+} from "../store/slice/authSlice";
 
 // =================== TYPES ===================
 export interface AdminUser {
@@ -24,7 +28,11 @@ export interface AdminLoginResponse {
 }
 
 // =================== LOGIN ===================
-const loginAdminApi = async (data: { email: string; password: string; rememberMe?: boolean }) => {
+const loginAdminApi = async (data: {
+  email: string;
+  password: string;
+  rememberMe?: boolean;
+}) => {
   const res = await axiosInstance.post("/admin/login", data);
   return res.data as AdminLoginResponse;
 };
@@ -85,6 +93,53 @@ export const useAdminRegister = () => {
     },
     onError: (err) => {
       console.log("Admin Registration Failed", err);
+    },
+  });
+};
+
+// =================== UPDATE PROFILE ===================
+const updateAdminProfileApi = async (formData: FormData) => {
+  const res = await axiosInstance.put("/admin/profile", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return res.data;
+};
+
+export const useAdminProfileUpdate = () => {
+  const dispatch = useDispatch<AppDispatch>();
+
+  return useMutation({
+    mutationFn: updateAdminProfileApi,
+    onSuccess: (data) => {
+      console.log("Admin Profile Updated");
+
+      dispatch(updateProfile(data.user));
+    },
+    onError: (err) => {
+      console.log("Profile update failed", err);
+    },
+  });
+};
+
+// =================== DELETE PROFILE IMAGE ===================
+const deleteAdminProfileImageApi = async () => {
+  const res = await axiosInstance.delete("/admin/profile-image");
+  return res.data;
+};
+
+export const useDeleteAdminProfileImage = () => {
+  const dispatch = useDispatch<AppDispatch>();
+
+  return useMutation({
+    mutationFn: deleteAdminProfileImageApi,
+    onSuccess: (data) => {
+      console.log("Profile Image Deleted");
+      dispatch(updateProfile(data.user));
+    },
+    onError: (err) => {
+      console.log("Image delete failed", err);
     },
   });
 };

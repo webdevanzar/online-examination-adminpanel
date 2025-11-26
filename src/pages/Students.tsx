@@ -1,166 +1,189 @@
-import { useState } from "react";
-import UpdateUserPopup from "../components/UpdateUserPopup";
+import { useState, useMemo } from "react";
+import { Search, Users as UsersIcon, ArrowUpDown } from "lucide-react";
 import Table from "../components/Table";
+import { useGetAllStudents } from "../services/student";
+import { getInitials, debounce, sortByField } from "../utils/helpers";
 
-interface User {
-  profile: string;
-  username: string;
-  email: string;
-  phone?: string;
-}
+type SortField = "fullName" | "email" | "createdAt";
+type SortDirection = "asc" | "desc";
 
 export const Students: React.FC = () => {
   const [search, setSearch] = useState<string>("");
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [sortField, setSortField] = useState<SortField>("createdAt");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
-  const [users, setUsers] = useState<User[]>([
-    {
-      profile: "/mnt/data/Screenshot (109).png",
-      username: "NewSuperf",
-      email: "anzarsha3222@gmail.com",
-      phone: "09961057130",
-    },
-    {
-      profile: "/mnt/data/Screenshot (109).png",
-      username: "noor",
-      email: "noor@gmail.com",
-      phone: "—",
-    },
-    {
-      profile: "/mnt/data/Screenshot (109).png",
-      username: "NewSuper",
-      email: "anzarsha3333@gmail.com",
-      phone: "09961057130",
+  const { data: students, isLoading, error } = useGetAllStudents();
 
-
-    },
-    {
-      profile: "/mnt/data/Screenshot (109).png",
-      username: "NewSuper",
-      email: "anzarsha3333@gmail.com",
-      phone: "09961057130",
-
-      
-    },
-
-    {
-      profile: "/mnt/data/Screenshot (109).png",
-      username: "NewSuper",
-      email: "anzarsha3333@gmail.com",
-      phone: "09961057130",
-
-      
-    },
-    {
-      profile: "/mnt/data/Screenshot (109).png",
-      username: "NewSuper",
-      email: "anzarsha3333@gmail.com",
-      phone: "09961057130",
-
-      
-    },
-    {
-      profile: "/mnt/data/Screenshot (109).png",
-      username: "NewSuper",
-      email: "anzarsha3333@gmail.com",
-      phone: "09961057130",
-
-      
-    },
-  ]);
-
-  const filteredUsers = users.filter(
-    (u) =>
-      u.username.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase())
-  );
-
-  // delete user
-  const deleteUser = (email: string) => {
-    setUsers((prev) => prev.filter((u) => u.email !== email));
+  // Handle sort
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
   };
 
-  return (
-    <>
-      {/* 🌈 Gradient Background */}
-      <div className="min-h-screen bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 p-10">
+  // Filter and sort students
+  const filteredAndSortedStudents = useMemo(() => {
+    if (!students) return [];
 
-        {/* Header Section */}
-        <div className="mb-8">
-          <h2 className="text-4xl font-bold text-gray-800 font-serif drop-shadow-md">
-            User Management
-          </h2>
-          <p className="text-gray-600 mt-2 text-lg font-serif">
-            Manage and monitor all system users
+    // Filter by search
+    let filtered = students.filter(
+      (student) =>
+        student.fullName.toLowerCase().includes(search.toLowerCase()) ||
+        student.email.toLowerCase().includes(search.toLowerCase())
+    );
+
+    // Sort
+    filtered = sortByField(filtered, sortField, sortDirection);
+
+    return filtered;
+  }, [students, search, sortField, sortDirection]);
+
+  return (
+    <div className="animate-fadeIn">
+      {/* Header */}
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-gray-900">Student Management</h2>
+        <p className="text-gray-500 text-sm mt-1">
+          View and manage all registered students
+        </p>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4">
+          {/* Search */}
+          <div className="flex-1 relative">
+            <Search
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={18}
+            />
+            <input
+              type="text"
+              placeholder="Search by name or email..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            />
+          </div>
+
+          {/* Sort Buttons */}
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => handleSort("fullName")}
+              className={`px-4 py-2 rounded-lg border transition-all duration-200 flex items-center gap-2 text-sm ${
+                sortField === "fullName"
+                  ? "bg-blue-50 border-blue-500 text-blue-700"
+                  : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              Name
+              {sortField === "fullName" && (
+                <ArrowUpDown size={14} className={sortDirection === "desc" ? "rotate-180" : ""} />
+              )}
+            </button>
+
+            <button
+              onClick={() => handleSort("createdAt")}
+              className={`px-4 py-2 rounded-lg border transition-all duration-200 flex items-center gap-2 text-sm ${
+                sortField === "createdAt"
+                  ? "bg-blue-50 border-blue-500 text-blue-700"
+                  : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              Join Date
+              {sortField === "createdAt" && (
+                <ArrowUpDown size={14} className={sortDirection === "desc" ? "rotate-180" : ""} />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Results Count */}
+        {!isLoading && students && (
+          <div className="mt-4 text-sm text-gray-600">
+            Showing {filteredAndSortedStudents.length} of {students.length} students
+          </div>
+        )}
+      </div>
+
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <p className="text-red-800 text-sm">
+            Failed to load students. Please try refreshing the page.
           </p>
         </div>
+      )}
 
-        {/* 🔍 Search Box */}
-        <div className="bg-white p-5 rounded-2xl shadow-xl mb-6 border border-gray-200">
-          <input
-            type="text"
-            placeholder="Search by username or email..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full border border-gray-300 rounded-xl p-3 outline-none 
-                       focus:ring-2 focus:ring-blue-500 transition-all"
-          />
-        </div>
-
-        {/* 🧊 User Table */}
-        <Table
-          fields={["SL No", "Profile", "Username", "Email", "Contact", "Actions"]}
-          data={filteredUsers}
-          formatRow={(u: any, i: number) => (
-            <>
-              <td className="p-3 font-semibold whitespace-nowrap">{i + 1}</td>
-              <td className="p-3 whitespace-nowrap">
-                <img
-                  src={u.profile}
-                  alt="profile"
-                  className="h-12 w-12 rounded-full border object-cover shadow-sm ring-2 ring-purple-200"
-                />
-              </td>
-              <td className="p-3 font-semibold text-gray-800 whitespace-nowrap">{u.username}</td>
-              <td className="p-3 text-gray-600 whitespace-nowrap">{u.email}</td>
-              <td className="p-3 text-gray-700 whitespace-nowrap">{u.phone ? u.phone : "—"}</td>
-              <td className="p-3">
-                <div className="flex gap-3 justify-center min-w-[200px]">
-                  <button
-                    onClick={() => setSelectedUser(u)}
-                    className="px-4 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 shadow-md transition"
-                  >
-                    Update
-                  </button>
-                  <button
-                    onClick={() => deleteUser(u.email)}
-                    className="px-4 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 shadow-md transition"
-                  >
-                    Delete
-                  </button>
+      {/* Table */}
+      {isLoading ? (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="space-y-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="animate-pulse flex items-center gap-4">
+                <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/3"></div>
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : filteredAndSortedStudents.length === 0 ? (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+          <UsersIcon className="mx-auto text-gray-300 mb-4" size={64} />
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">No students found</h3>
+          <p className="text-gray-500 text-sm">
+            {search
+              ? "Try adjusting your search criteria"
+              : "No students have registered yet"}
+          </p>
+        </div>
+      ) : (
+        <Table
+          fields={["SL No", "Profile", "Name", "Email", "Phone", "Joined"]}
+          data={filteredAndSortedStudents}
+          formatRow={(student: any, i: number) => (
+            <>
+              <td className="p-4 text-gray-700 whitespace-nowrap">{i + 1}</td>
+              <td className="p-4 whitespace-nowrap">
+                {student.profileImage ? (
+                  <img
+                    src={student.profileImage}
+                    alt={student.fullName}
+                    className="h-10 w-10 rounded-full border border-gray-200 object-cover"
+                  />
+                ) : (
+                  <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center border border-gray-200">
+                    <span className="text-blue-700 text-sm font-medium">
+                      {getInitials(student.fullName)}
+                    </span>
+                  </div>
+                )}
+              </td>
+              <td className="p-4 font-medium text-gray-900 whitespace-nowrap">
+                {student.fullName}
+              </td>
+              <td className="p-4 text-gray-600 whitespace-nowrap">{student.email}</td>
+              <td className="p-4 text-gray-600 whitespace-nowrap">
+                {student.phoneNumber || "—"}
+              </td>
+              <td className="p-4 text-gray-600 whitespace-nowrap text-sm">
+                {new Date(student.createdAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
               </td>
             </>
           )}
           stickyHeaderOffset="0px"
         />
-      </div>
-
-      {/* Popup */}
-      {selectedUser && (
-        <UpdateUserPopup
-          user={selectedUser}
-          onClose={() => setSelectedUser(null)}
-          onUpdate={(data: Partial<User>) => {
-            setUsers((prev) =>
-              prev.map((u) =>
-                u.email === selectedUser.email ? { ...u, ...data } : u
-              )
-            );
-            setSelectedUser(null);
-          }}
-        />
       )}
-    </>
+    </div>
   );
 };

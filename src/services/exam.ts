@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "../utils/intercepotor";
 import { toast } from "sonner";
+import type { AxiosError } from "axios";
 
 // =================== TYPES ===================
 export interface Exam {
@@ -31,8 +32,8 @@ export interface CreateExamData {
   startTime: Date | string;
   endTime: Date | string;
   duration: number;
-  totalMarks: number;
   passingMarks: number;
+  totalMarks: number;
   microphoneRequired?: boolean;
   faceDetectionRequired?: boolean;
   questionCount?: number;
@@ -40,7 +41,7 @@ export interface CreateExamData {
   isPublished?: boolean;
 }
 
-export type UpdateExamData  = Partial<CreateExamData> 
+export type UpdateExamData = Partial<CreateExamData>;
 
 export interface Option {
   id?: string;
@@ -66,7 +67,8 @@ export const examKeys = {
   list: (filters?: any) => [...examKeys.lists(), filters] as const,
   details: () => [...examKeys.all, "detail"] as const,
   detail: (id: string) => [...examKeys.details(), id] as const,
-  questions: (examId: string) => [...examKeys.detail(examId), "questions"] as const,
+  questions: (examId: string) =>
+    [...examKeys.detail(examId), "questions"] as const,
 };
 
 // =================== CREATE EXAM ===================
@@ -84,10 +86,21 @@ export const useCreateExam = () => {
       toast.success("Exam created successfully");
       queryClient.invalidateQueries({ queryKey: examKeys.lists() });
     },
-    onError: (err: any) => {
-      const errorMessage = err?.response?.data?.message || "Failed to create exam";
-      toast.error(errorMessage);
-      console.error("Create exam failed:", err);
+    onError: (err: unknown) => {
+      const error = err as AxiosError<{ message: string }>;
+      const msg = error.response?.data?.message || "Something went wrong";
+      toast.error(msg, {
+        duration: 1500,
+        style: {
+          background: "#FEE2E2",
+          color: "#B91C1C",
+          border: "1px solid #FCA5A5",
+          padding: "12px 16px",
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
     },
   });
 };
@@ -140,12 +153,25 @@ export const useUpdateExam = () => {
     onSuccess: (_, variables) => {
       toast.success("Exam updated successfully");
       queryClient.invalidateQueries({ queryKey: examKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: examKeys.detail(variables.examId) });
+      queryClient.invalidateQueries({
+        queryKey: examKeys.detail(variables.examId),
+      });
     },
-    onError: (err: any) => {
-      const errorMessage = err?.response?.data?.message || "Failed to update exam";
-      toast.error(errorMessage);
-      console.error("Update exam failed:", err);
+    onError: (err: unknown) => {
+      const error = err as AxiosError<{ message: string }>;
+      const msg = error.response?.data?.message || "Something went wrong";
+      toast.error(msg, {
+        duration: 1500,
+        style: {
+          background: "#FEE2E2",
+          color: "#B91C1C",
+          border: "1px solid #FCA5A5",
+          padding: "12px 16px",
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
     },
   });
 };
@@ -165,10 +191,21 @@ export const useDeleteExam = () => {
       toast.success("Exam deleted successfully");
       queryClient.invalidateQueries({ queryKey: examKeys.lists() });
     },
-    onError: (err: any) => {
-      const errorMessage = err?.response?.data?.message || "Failed to delete exam";
-      toast.error(errorMessage);
-      console.error("Delete exam failed:", err);
+    onError: (err: unknown) => {
+      const error = err as AxiosError<{ message: string }>;
+      const msg = error.response?.data?.message || "Something went wrong";
+      toast.error(msg, {
+        duration: 1500,
+        style: {
+          background: "#FEE2E2",
+          color: "#B91C1C",
+          border: "1px solid #FCA5A5",
+          padding: "12px 16px",
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
     },
   });
 };

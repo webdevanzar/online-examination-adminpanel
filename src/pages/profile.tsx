@@ -1,4 +1,4 @@
-import { Mail, Camera, Save, X, Trash2, Edit } from "lucide-react";
+import { Mail, Camera, Save, X, Trash2, Edit, Upload } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -6,33 +6,54 @@ import type { RootState } from "../store";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
-import { useAdminProfileUpdate, useDeleteAdminProfileImage } from "../services/auth";
+import {
+  useAdminProfileUpdate,
+  useAddAdminProfileImage,
+  useDeleteAdminProfileImage,
+} from "../services/auth";
 import { toast } from "sonner";
 
 // Only allow name and email on client; image is handled as FormData file
 const ClientUpdateSchema = z.object({
-  fullName: z.string().min(3, "Username must be at least 3 characters").optional(),
+  fullName: z
+    .string()
+    .min(3, "Username must be at least 3 characters")
+    .optional(),
   email: z.string().email({ message: "Invalid email address" }).optional(),
 });
 
-type FormValues = z.infer<typeof ClientUpdateSchema> & { profileImage?: FileList };
+type FormValues = z.infer<typeof ClientUpdateSchema> & {
+  profileImage?: FileList;
+};
 
 const ProfilePage = () => {
   const navigate = useNavigate();
-  const { fullName, email, profileImage } = useSelector((s: RootState) => s.auth);
+  const { fullName, email, profileImage } = useSelector(
+    (s: RootState) => s.auth
+  );
 
-  const [selectedImageUrl, setSelectedImageUrl] = useState<string | undefined>(undefined);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | undefined>(
+    undefined
+  );
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [fileInputKey, setFileInputKey] = useState(0);
   const fileInputId = "profileImageInput";
 
-  const { mutate: updateProfile, isPending: isUpdating } = useAdminProfileUpdate();
-  const { mutate: deleteProfileImage, isPending: isDeleting } = useDeleteAdminProfileImage();
+  const { mutate: updateProfile, isPending: isUpdating } =
+    useAdminProfileUpdate();
+  const { mutate: addProfileImage, isPending: isUploading } =
+    useAddAdminProfileImage();
+  const { mutate: deleteProfileImage, isPending: isDeleting } =
+    useDeleteAdminProfileImage();
 
-  const defaultValues = useMemo(() => ({
-    fullName: fullName || "",
-    email: email || "",
-  }), [fullName, email]);
+  const defaultValues = useMemo(
+    () => ({
+      fullName: fullName || "",
+      email: email || "",
+    }),
+    [fullName, email]
+  );
 
   const {
     register,
@@ -83,10 +104,8 @@ const ProfilePage = () => {
         toast.success("Profile updated successfully");
         setIsEditing(false);
         setSelectedImageUrl(undefined);
+        setSelectedFile(null);
         setFileInputKey((k) => k + 1);
-      },
-      onError: () => {
-        toast.error("Failed to update profile");
       },
     });
   };
@@ -114,11 +133,32 @@ const ProfilePage = () => {
     setSelectedImageUrl(url);
     // mark form dirty with file and enter edit mode
     setValue("profileImage", e.target.files as FileList, { shouldDirty: true });
+    setSelectedFile(file);
     setIsEditing(true);
   };
 
+  const handleUploadSelectedImage = () => {
+    if (!selectedFile) {
+      toast.info("Please select an image first");
+      return;
+    }
+    const fd = new FormData();
+    fd.append("profileImage", selectedFile);
+    addProfileImage(fd, {
+      onSuccess: () => {
+        toast.success("Profile image uploaded");
+        setSelectedImageUrl(undefined);
+        setSelectedFile(null);
+        setIsEditing(false);
+        setFileInputKey((k) => k + 1);
+      },
+    });
+  };
+
   const handleRemoveImage = () => {
-    if (!window.confirm("Are you sure you want to delete your profile image?")) {
+    if (
+      !window.confirm("Are you sure you want to delete your profile image?")
+    ) {
       return;
     }
 
@@ -126,6 +166,7 @@ const ProfilePage = () => {
       onSuccess: () => {
         toast.success("Profile image deleted successfully");
         setSelectedImageUrl(undefined);
+        setSelectedFile(null);
         setFileInputKey((k) => k + 1);
       },
       onError: () => {
@@ -135,7 +176,7 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         <div className="bg-white shadow-sm rounded-xl overflow-hidden border border-gray-200">
           {/* Header */}
@@ -153,14 +194,26 @@ const ProfilePage = () => {
           </div>
 
           {/* Content */}
-          <form className="p-6 md:p-8 space-y-8" onSubmit={handleSubmit(onSubmit)}>
+          <form
+            className="p-6 md:p-8 space-y-8"
+            onSubmit={handleSubmit(onSubmit)}
+          >
             {/* Avatar */}
             <div className="flex items-start gap-6">
               <div>
                 <img
-                  src={selectedImageUrl || profileImage || (fullName ? `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}` : "")}
+                  src={
+                    selectedImageUrl ||
+                    profileImage ||
+                    (fullName
+                      ? `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          fullName
+                        )}`
+                      : "")
+                  }
                   alt="Profile"
-                  className="w-28 h-28 rounded-full object-cover border border-gray-200 shadow-sm bg-white"
+                  className="w-28 h-28 rounded-full object-cover border border-gray-200 shadow-sm bg-white cursor-pointer hover:ring-2 hover:ring-blue-500"
+                  onClick={() => document.getElementById(fileInputId)?.click()}
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -191,11 +244,24 @@ const ProfilePage = () => {
                 ) : (
                   <button
                     type="button"
-                    onClick={() => { setIsEditing(true); document.getElementById(fileInputId)?.click(); }}
+                    onClick={() => {
+                      setIsEditing(true);
+                      document.getElementById(fileInputId)?.click();
+                    }}
                     className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50 w-max"
                     aria-label="Upload profile image"
                   >
                     <Camera size={16} /> Upload Image
+                  </button>
+                )}
+                {selectedFile && (
+                  <button
+                    type="button"
+                    onClick={handleUploadSelectedImage}
+                    disabled={isUploading}
+                    className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 w-max"
+                  >
+                    <Upload size={16} /> Upload Selected Image
                   </button>
                 )}
                 <p className="text-xs text-gray-500">JPEG/PNG up to 5MB.</p>
@@ -205,7 +271,9 @@ const ProfilePage = () => {
             {/* Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Full Name
+                </label>
                 <input
                   type="text"
                   className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
@@ -214,14 +282,21 @@ const ProfilePage = () => {
                   disabled={!isEditing}
                 />
                 {errors.fullName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.fullName.message as string}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.fullName.message as string}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Email
+                </label>
                 <div className="mt-1 relative">
-                  <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Mail
+                    size={16}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
                   <input
                     type="email"
                     className="w-full rounded-lg border border-gray-300 pl-9 pr-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
@@ -231,10 +306,11 @@ const ProfilePage = () => {
                   />
                 </div>
                 {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">{errors.email.message as string}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.email.message as string}
+                  </p>
                 )}
               </div>
-
             </div>
 
             {/* Actions */}
@@ -254,6 +330,7 @@ const ProfilePage = () => {
                     onClick={() => {
                       reset(defaultValues);
                       setSelectedImageUrl(undefined);
+                      setSelectedFile(null);
                       setIsEditing(false);
                     }}
                     className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
@@ -262,7 +339,7 @@ const ProfilePage = () => {
                   </button>
                   <button
                     type="submit"
-                    disabled={(isUpdating) || (!isDirty && !selectedImageUrl)}
+                    disabled={isUpdating || (!isDirty && !selectedImageUrl)}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
                   >
                     <Save size={18} /> Save Changes

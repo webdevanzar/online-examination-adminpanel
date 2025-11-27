@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { InputField } from "./InputField";
 
 interface CreateExamPopupProps {
@@ -14,7 +16,6 @@ interface CreateExamData {
   instructions: string;
   startTime: string;
   endTime: string;
-  duration: string | number;
   totalMarks: string | number;
   passingMarks: string | number;
   microphoneRequired: boolean;
@@ -39,7 +40,6 @@ const CreateExamPopup = ({ onClose, onSave }: CreateExamPopupProps) => {
 
     startTime: "",
     endTime: "",
-    duration: "",
     totalMarks: "",
     passingMarks: "",
 
@@ -74,39 +74,53 @@ const CreateExamPopup = ({ onClose, onSave }: CreateExamPopupProps) => {
       }
       return target.value;
     })();
-    setForm(prev => ({
+    setForm((prev) => ({
       ...prev,
       [name]: value as CreateExamData[typeof name],
     }));
   };
 
-  type ExamFormValues = {
-    title: string;
-    subject: string;
-    totalMarks: string | number;
-    passingMarks: string | number;
-    startTime: string;
-    endTime: string;
-    duration: string | number;
-  };
+  const ExamSchema = z
+    .object({
+      title: z.string().min(1, "Title is required"),
+      subject: z.string().min(1, "Subject is required"),
+      totalMarks: z.coerce.number().min(1, "Total marks is required"),
+      passingMarks: z.coerce.number().min(0, "Passing marks is required"),
+      startTime: z.string().min(1, "Start time is required"),
+      endTime: z.string().min(1, "End time is required"),
+      instructions: z.string().optional(),
+      description: z.string().optional(),
+    })
+    .refine(
+      (v) => new Date(v.endTime) > new Date(v.startTime),
+      { path: ["endTime"], message: "End time must be after start time" }
+    )
+    .refine(
+      (v) => v.passingMarks <= v.totalMarks,
+      { path: ["passingMarks"], message: "Passing marks cannot be greater than total marks" }
+    );
 
-  const methods = useForm<ExamFormValues>({
+  type ExamFormInput = z.input<typeof ExamSchema>;
+  type ExamFormOutput = z.output<typeof ExamSchema>;
+
+  const methods = useForm<ExamFormInput, undefined, ExamFormOutput>({
     mode: "onTouched",
+    resolver: zodResolver(ExamSchema),
     defaultValues: {
       title: form.title,
       subject: form.subject,
-      totalMarks: form.totalMarks,
-      passingMarks: form.passingMarks,
+      totalMarks: Number(form.totalMarks),
+      passingMarks: Number(form.passingMarks),
       startTime: form.startTime,
       endTime: form.endTime,
-      duration: form.duration,
+      instructions: form.instructions,
+      description: form.description,
     },
   });
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white p-6 w-[650px] rounded-xl shadow-xl max-h-[90vh] overflow-y-auto">
-
         {/* HEADER */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold">Create Exam</h2>
@@ -164,14 +178,6 @@ const CreateExamPopup = ({ onClose, onSave }: CreateExamPopupProps) => {
               placeholder="End"
               rules={{ required: "End time is required" }}
             />
-
-            <InputField
-              name={"duration"}
-              label="Duration (Minutes)"
-              type="number"
-              placeholder="Duration"
-              rules={{ required: "Duration is required" }}
-            />
           </div>
         </FormProvider>
 
@@ -216,7 +222,10 @@ const CreateExamPopup = ({ onClose, onSave }: CreateExamPopupProps) => {
 
         {/* FOOTER */}
         <div className="flex justify-end mt-6 gap-4">
-          <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded-lg">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-300 rounded-lg"
+          >
             Cancel
           </button>
 
@@ -229,34 +238,7 @@ const CreateExamPopup = ({ onClose, onSave }: CreateExamPopupProps) => {
                 return; // Don't submit if form is invalid
               }
 
-              // Additional validation
-              if (!form.description.trim()) {
-                alert("Please enter exam description");
-                return;
-              }
-
-              const values = methods.getValues();
-              const totalMarks = Number(values.totalMarks);
-              const passingMarks = Number(values.passingMarks);
-
-              if (passingMarks > totalMarks) {
-                alert("Passing marks cannot be greater than total marks");
-                return;
-              }
-
-              const startTime = new Date(values.startTime);
-              const endTime = new Date(values.endTime);
-
-              if (endTime <= startTime) {
-                alert("End time must be after start time");
-                return;
-              }
-
-              if (startTime < new Date()) {
-                alert("Start time cannot be in the past");
-                return;
-              }
-
+              const values = methods.getValues() as ExamFormOutput;
               onSave({ ...form, ...values });
             }}
             className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"

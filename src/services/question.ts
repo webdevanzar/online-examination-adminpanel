@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "../utils/intercepotor";
-import { toast } from "sonner";
 import { examKeys } from "./exam";
+import { toast } from "sonner";
+import type { AxiosError } from "axios";
 
 // =================== TYPES ===================
 export interface OptionData {
@@ -45,7 +46,10 @@ const createQuestionApi = async ({
   examId: string;
   data: CreateQuestionData;
 }) => {
-  const res = await axiosInstance.post<CreateQuestionResponse>(`/admin/exams/${examId}/questions`, data);
+  const res = await axiosInstance.post<CreateQuestionResponse>(
+    `/admin/exams/${examId}/questions`,
+    data
+  );
   return res.data;
 };
 
@@ -54,15 +58,30 @@ export const useCreateQuestion = () => {
 
   return useMutation({
     mutationFn: createQuestionApi,
-    onSuccess: (data, variables) => {
-      toast.success(`Question created successfully. Remaining marks: ${data.remainingMarks}/${data.examTotalMarks}`);
-      queryClient.invalidateQueries({ queryKey: examKeys.questions(variables.examId) });
-      queryClient.invalidateQueries({ queryKey: examKeys.detail(variables.examId) });
+    onSuccess: (_data, variables) => {
+      toast.success("Question created successfully");
+      queryClient.invalidateQueries({
+        queryKey: examKeys.questions(variables.examId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: examKeys.detail(variables.examId),
+      });
     },
-    onError: (err: any) => {
-      const errorMessage = err?.response?.data?.message || "Failed to create question";
-      toast.error(errorMessage);
-      console.error("Create question failed:", err);
+    onError: (err: unknown) => {
+      const error = err as AxiosError<{ message: string }>;
+      const msg = error.response?.data?.message || "Something went wrong";
+      toast.error(msg, {
+        duration: 1500,
+        style: {
+          background: "#FEE2E2",
+          color: "#B91C1C",
+          border: "1px solid #FCA5A5",
+          padding: "12px 16px",
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
     },
   });
 };
@@ -75,7 +94,10 @@ const updateQuestionApi = async ({
   questionId: string;
   data: UpdateQuestionData;
 }) => {
-  const res = await axiosInstance.put<UpdateQuestionResponse>(`/admin/questions/${questionId}`, data);
+  const res = await axiosInstance.put<UpdateQuestionResponse>(
+    `/admin/questions/${questionId}`,
+    data
+  );
   return res.data;
 };
 
@@ -84,15 +106,26 @@ export const useUpdateQuestion = () => {
 
   return useMutation({
     mutationFn: updateQuestionApi,
-    onSuccess: (data) => {
-      toast.success(`Question updated successfully. Remaining marks: ${data.remainingMarks}/${data.examTotalMarks}`);
+    onSuccess: () => {
+      toast.success("Question updated successfully");
       // Invalidate all exam queries as we don't know which exam this question belongs to
       queryClient.invalidateQueries({ queryKey: examKeys.all });
     },
-    onError: (err: any) => {
-      const errorMessage = err?.response?.data?.message || "Failed to update question";
-      toast.error(errorMessage);
-      console.error("Update question failed:", err);
+    onError: (err: unknown) => {
+      const error = err as AxiosError<{ message: string }>;
+      const msg = error.response?.data?.message || "Something went wrong";
+      toast.error(msg, {
+        duration: 1500,
+        style: {
+          background: "#FEE2E2",
+          color: "#B91C1C",
+          border: "1px solid #FCA5A5",
+          padding: "12px 16px",
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
     },
   });
 };
@@ -113,10 +146,21 @@ export const useDeleteQuestion = () => {
       // Invalidate all exam queries as we don't know which exam this question belongs to
       queryClient.invalidateQueries({ queryKey: examKeys.all });
     },
-    onError: (err: any) => {
-      const errorMessage = err?.response?.data?.message || "Failed to delete question";
-      toast.error(errorMessage);
-      console.error("Delete question failed:", err);
+    onError: (err: unknown) => {
+      const error = err as AxiosError<{ message: string }>;
+      const msg = error.response?.data?.message || "Something went wrong";
+      toast.error(msg, {
+        duration: 1500,
+        style: {
+          background: "#FEE2E2",
+          color: "#B91C1C",
+          border: "1px solid #FCA5A5",
+          padding: "12px 16px",
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
     },
   });
 };
@@ -142,15 +186,30 @@ export const useBulkCreateQuestions = () => {
 
   return useMutation({
     mutationFn: bulkCreateQuestionsApi,
-    onSuccess: (_, variables) => {
-      toast.success(`${variables.questions.length} questions created successfully`);
-      queryClient.invalidateQueries({ queryKey: examKeys.questions(variables.examId) });
-      queryClient.invalidateQueries({ queryKey: examKeys.detail(variables.examId) });
+    onSuccess: (_data, variables) => {
+      toast.success(`Created ${variables.questions.length} questions`);
+      queryClient.invalidateQueries({
+        queryKey: examKeys.questions(variables.examId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: examKeys.detail(variables.examId),
+      });
     },
-    onError: (err: any) => {
-      const errorMessage = err?.response?.data?.message || "Failed to create questions";
-      toast.error(errorMessage);
-      console.error("Bulk create questions failed:", err);
+    onError: (err: unknown) => {
+      const error = err as AxiosError<{ message: string }>;
+      const msg = error.response?.data?.message || "Something went wrong";
+      toast.error(msg, {
+        duration: 1500,
+        style: {
+          background: "#FEE2E2",
+          color: "#B91C1C",
+          border: "1px solid #FCA5A5",
+          padding: "12px 16px",
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
     },
   });
 };

@@ -3,11 +3,13 @@ import type { AppDispatch } from "../store";
 import { axiosInstance } from "../utils/intercepotor";
 import { useMutation } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   loginSuccess,
   logoutSuccess,
   updateProfile,
 } from "../store/slice/authSlice";
+import type { AxiosError } from "axios";
 
 // =================== TYPES ===================
 export interface AdminUser {
@@ -43,10 +45,23 @@ export const useAdminLogin = () => {
     mutationFn: loginAdminApi,
     onSuccess: (data) => {
       dispatch(loginSuccess(data.user));
-      console.log("Admin Login Successful");
+      toast.success("Logged in successfully");
     },
-    onError: (err) => {
-      console.log("Admin Login Failed", err);
+    onError: (err: unknown) => {
+      const error = err as AxiosError<{ message: string }>;
+      const msg = error.response?.data?.message || "Something went wrong";
+      toast.error(msg, {
+        duration: 1500,
+        style: {
+          background: "#FEE2E2",
+          color: "#B91C1C",
+          border: "1px solid #FCA5A5",
+          padding: "12px 16px",
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
     },
   });
 };
@@ -64,10 +79,23 @@ export const useAdminLogout = () => {
     mutationFn: logoutAdminApi,
     onSuccess: () => {
       dispatch(logoutSuccess());
-      console.log("Admin Logged Out");
+      toast.success("Logged out");
     },
-    onError: (err) => {
-      console.log("Logout failed", err);
+    onError: (err: unknown) => {
+      const error = err as AxiosError<{ message: string }>;
+      const msg = error.response?.data?.message || "Something went wrong";
+      toast.error(msg, {
+        duration: 1500,
+        style: {
+          background: "#FEE2E2",
+          color: "#B91C1C",
+          border: "1px solid #FCA5A5",
+          padding: "12px 16px",
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
     },
   });
 };
@@ -87,12 +115,25 @@ export const useAdminRegister = () => {
 
   return useMutation({
     mutationFn: registerAdminApi,
-    onSuccess: (data) => {
-      console.log("Admin Registered Successfully", data);
+    onSuccess: () => {
+      toast.success("Admin registered successfully");
       queryClient.invalidateQueries({ queryKey: ["admins"] });
     },
-    onError: (err) => {
-      console.log("Admin Registration Failed", err);
+    onError: (err: unknown) => {
+      const error = err as AxiosError<{ message: string }>;
+      const msg = error.response?.data?.message || "Something went wrong";
+      toast.error(msg, {
+        duration: 1500,
+        style: {
+          background: "#FEE2E2",
+          color: "#B91C1C",
+          border: "1px solid #FCA5A5",
+          padding: "12px 16px",
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
     },
   });
 };
@@ -117,8 +158,59 @@ export const useAdminProfileUpdate = () => {
 
       dispatch(updateProfile(data.user));
     },
-    onError: (err) => {
-      console.log("Profile update failed", err);
+    onError: (err: unknown) => {
+      const error = err as AxiosError<{ message: string }>;
+      const msg = error.response?.data?.message || "Something went wrong";
+      toast.error(msg, {
+        duration: 1500,
+        style: {
+          background: "#FEE2E2",
+          color: "#B91C1C",
+          border: "1px solid #FCA5A5",
+          padding: "12px 16px",
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
+    },
+  });
+};
+
+// =================== ADD PROFILE IMAGE ===================
+const addAdminProfileImageApi = async (formData: FormData) => {
+  const res = await axiosInstance.put("/admin/profile-image", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return res.data;
+};
+
+export const useAddAdminProfileImage = () => {
+  const dispatch = useDispatch<AppDispatch>();
+
+  return useMutation({
+    mutationFn: addAdminProfileImageApi,
+    onSuccess: (data) => {
+      console.log("Profile Image Uploaded");
+      dispatch(updateProfile(data.user));
+    },
+    onError: (err: unknown) => {
+      const error = err as AxiosError<{ message: string }>;
+      const msg = error.response?.data?.message || "Something went wrong";
+      toast.error(msg, {
+        duration: 1500,
+        style: {
+          background: "#FEE2E2",
+          color: "#B91C1C",
+          border: "1px solid #FCA5A5",
+          padding: "12px 16px",
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
     },
   });
 };
@@ -138,8 +230,21 @@ export const useDeleteAdminProfileImage = () => {
       console.log("Profile Image Deleted");
       dispatch(updateProfile(data.user));
     },
-    onError: (err) => {
-      console.log("Image delete failed", err);
+    onError: (err: unknown) => {
+      const error = err as AxiosError<{ message: string }>;
+      const msg = error.response?.data?.message || "Something went wrong";
+      toast.error(msg, {
+        duration: 1500,
+        style: {
+          background: "#FEE2E2",
+          color: "#B91C1C",
+          border: "1px solid #FCA5A5",
+          padding: "12px 16px",
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
     },
   });
 };

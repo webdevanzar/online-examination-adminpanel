@@ -31,12 +31,14 @@ const UpdateExamPopup = ({ exam, onClose, onUpdate }: UpdateExamPopupProps) => {
   const [startTime, setStartTime] = useState(formatDateTimeLocal(exam.startTime));
   const [endTime, setEndTime] = useState(formatDateTimeLocal(exam.endTime));
   const [isEditing, setIsEditing] = useState(false);
+  const [isPublished, setIsPublished] = useState<boolean>(!!exam.isPublished);
 
   // Check if any changes were made
   const hasChanges = () => {
     const originalStart = formatDateTimeLocal(exam.startTime);
     const originalEnd = formatDateTimeLocal(exam.endTime);
-    return startTime !== originalStart || endTime !== originalEnd;
+    const originalPublished = !!exam.isPublished;
+    return startTime !== originalStart || endTime !== originalEnd || isPublished !== originalPublished;
   };
 
   const handleUpdate = () => {
@@ -68,6 +70,7 @@ const UpdateExamPopup = ({ exam, onClose, onUpdate }: UpdateExamPopupProps) => {
     const updateData: UpdateExamData = {
       startTime: startTime,
       endTime: endTime,
+      isPublished: isPublished,
     };
 
     onUpdate(updateData);
@@ -78,6 +81,7 @@ const UpdateExamPopup = ({ exam, onClose, onUpdate }: UpdateExamPopupProps) => {
       // Reset to original values when canceling edit
       setStartTime(formatDateTimeLocal(exam.startTime));
       setEndTime(formatDateTimeLocal(exam.endTime));
+      setIsPublished(!!exam.isPublished);
     }
     setIsEditing(!isEditing);
   };
@@ -148,6 +152,33 @@ const UpdateExamPopup = ({ exam, onClose, onUpdate }: UpdateExamPopupProps) => {
               <div>
                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Questions</label>
                 <p className="text-gray-900 font-semibold mt-1">{exam.questionCount || 0} questions</p>
+              </div>
+
+              {/* Publish Toggle */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Publish Exam
+                </label>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => isEditing && setIsPublished((v) => !v)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      isPublished ? 'bg-green-600' : 'bg-gray-300'
+                    } ${!isEditing ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    aria-pressed={isPublished}
+                    aria-label="Toggle publish"
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        isPublished ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                  <span className="text-sm text-gray-700">
+                    {isPublished ? 'Published (students can see this exam)' : 'Unpublished (hidden from students)'}
+                  </span>
+                </div>
               </div>
             </div>
 

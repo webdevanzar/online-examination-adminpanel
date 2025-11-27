@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "../utils/intercepotor";
 import { toast } from "sonner";
+import type { AxiosError } from "axios";
 
 // =================== TYPES ===================
 export interface ExamAttempt {
@@ -37,7 +38,8 @@ export const attemptKeys = {
   details: () => [...attemptKeys.all, "detail"] as const,
   detail: (id: string) => [...attemptKeys.details(), id] as const,
   byExam: (examId: string) => [...attemptKeys.all, "exam", examId] as const,
-  byStudent: (studentId: string) => [...attemptKeys.all, "student", studentId] as const,
+  byStudent: (studentId: string) =>
+    [...attemptKeys.all, "student", studentId] as const,
 };
 
 // =================== GET EXAM ATTEMPTS ===================
@@ -56,7 +58,9 @@ export const useGetExamAttempts = (examId: string) => {
 
 // =================== TERMINATE ATTEMPT ===================
 const terminateAttemptApi = async (attemptId: string) => {
-  const res = await axiosInstance.post(`/admin/attempts/${attemptId}/terminate`);
+  const res = await axiosInstance.post(
+    `/admin/attempts/${attemptId}/terminate`
+  );
   return res.data;
 };
 
@@ -69,9 +73,21 @@ export const useTerminateAttempt = () => {
       toast.success("Attempt terminated successfully");
       queryClient.invalidateQueries({ queryKey: attemptKeys.all });
     },
-    onError: (err) => {
-      // toast.error(err?.response?.data?.message || "Failed to terminate attempt");
-      console.error("Terminate attempt failed:", err);
+    onError: (err: unknown) => {
+      const error = err as AxiosError<{ message: string }>;
+      const msg = error.response?.data?.message || "Something went wrong";
+      toast.error(msg, {
+        duration: 1500,
+        style: {
+          background: "#FEE2E2",
+          color: "#B91C1C",
+          border: "1px solid #FCA5A5",
+          padding: "12px 16px",
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
     },
   });
 };
@@ -97,9 +113,21 @@ export const useLogCheatEvent = () => {
     onSuccess: () => {
       toast.success("Cheat event logged successfully");
     },
-    onError: (err) => {
-      // toast.error(err?.response?.data?.message || "Failed to log cheat event");
-      console.error("Log cheat event failed:", err);
+    onError: (err: unknown) => {
+      const error = err as AxiosError<{ message: string }>;
+      const msg = error.response?.data?.message || "Something went wrong";
+      toast.error(msg, {
+        duration: 1500,
+        style: {
+          background: "#FEE2E2",
+          color: "#B91C1C",
+          border: "1px solid #FCA5A5",
+          padding: "12px 16px",
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
     },
   });
 };

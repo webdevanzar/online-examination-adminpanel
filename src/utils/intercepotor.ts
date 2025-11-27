@@ -16,7 +16,7 @@ axiosInstance.interceptors.response.use(
       store.dispatch(logoutSuccess());
 
       if (typeof window !== "undefined") {
-        window.location.href = "/auth/login";
+        window.location.href = "/login";
       }
     }
 

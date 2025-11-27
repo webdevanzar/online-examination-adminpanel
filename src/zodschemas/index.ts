@@ -40,8 +40,6 @@ export const CreateExamSchema = z
     startTime: z.coerce.date(),
     endTime: z.coerce.date(),
 
-    duration: z.number().min(1, "Duration must be at least 1 minute"),
-
     totalMarks: z.number().min(1),
     passingMarks: z.number().min(0),
 

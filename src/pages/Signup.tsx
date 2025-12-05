@@ -6,13 +6,15 @@ import type { AxiosError } from "axios";
 import { toast } from "sonner";
 import { useNavigate, Link } from "react-router-dom";
 import { AdminRegisterSchema } from "../zodschemas";
-import { useAdminRegister } from "../services/auth";
+import { useAdminGoogleAuth, useAdminRegister } from "../services/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 export const Signup = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [profileFile, setProfileFile] = useState<File | null>(null);
   const navigate = useNavigate();
+
+  const { googleLogin, isPending: googlePending } = useAdminGoogleAuth();
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -166,6 +168,8 @@ export const Signup = () => {
             {/* Google Signup */}
             <button
               type="button"
+              onClick={() => googleLogin()}
+              disabled={googlePending}
               className="w-full border py-2 rounded-md flex items-center justify-center gap-2 hover:bg-gray-50"
             >
               <img

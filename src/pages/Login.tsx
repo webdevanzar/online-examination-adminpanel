@@ -2,16 +2,16 @@ import { FormProvider, useForm } from "react-hook-form";
 import { InputField } from "../components/InputField";
 import { AdminLoginSchema, type AdminLoginSchemaType } from "../zodschemas";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAdminLogin } from "../services/auth";
+import { useAdminGoogleAuth, useAdminLogin } from "../services/auth";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 
 export const Login = () => {
-
   const navigate = useNavigate();
 
   const { mutate, isPending } = useAdminLogin();
+  const { googleLogin, isPending: googlePending } = useAdminGoogleAuth();
 
   const methods = useForm<AdminLoginSchemaType>({
     mode: "onTouched",
@@ -20,7 +20,7 @@ export const Login = () => {
   });
 
   const onSubmit = (data: AdminLoginSchemaType) => {
-     mutate(data, {
+    mutate(data, {
       onSuccess: () => {
         toast.success("Login successfully");
         navigate("/");
@@ -85,6 +85,8 @@ export const Login = () => {
             {/* Google button */}
             <button
               type="button"
+              onClick={() => googleLogin()}
+              disabled={googlePending}
               className="w-full border py-2 rounded-md flex items-center justify-center gap-2 hover:bg-gray-50"
             >
               <img

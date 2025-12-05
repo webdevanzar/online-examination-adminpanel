@@ -10,6 +10,7 @@ import {
   updateProfile,
 } from "../store/slice/authSlice";
 import type { AxiosError } from "axios";
+import { useGoogleLogin } from "@react-oauth/google";
 
 // =================== TYPES ===================
 export interface AdminUser {
@@ -66,6 +67,59 @@ export const useAdminLogin = () => {
   });
 };
 
+// =================== GOOGLE Auth ===================
+const googleAdminAuthApi = async (data: { accessToken: string }) => {
+  const res = await axiosInstance.post("/admin/auth/google", data);
+  return res.data as AdminLoginResponse;
+};
+export const useAdminGoogleAuth = () => {
+  const dispatch = useDispatch<AppDispatch>();
+
+  const mutation = useMutation({
+    mutationFn: googleAdminAuthApi,
+    onSuccess: (data) => {
+      dispatch(loginSuccess(data.user));
+      toast.success("Logged in with Google");
+    },
+    onError: (err: unknown) => {
+      const error = err as AxiosError<{ message: string }>;
+      const msg =
+        error.response?.data?.message ||
+        "Something went wrong with Google login";
+
+      toast.error(msg, {
+        duration: 1500,
+        style: {
+          background: "#FEE2E2",
+          color: "#B91C1C",
+          border: "1px solid #FCA5A5",
+          padding: "12px 16px",
+          borderRadius: "8px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
+    },
+  });
+
+  //  Google popup logic stays in hook (not API)
+  const googleLogin = useGoogleLogin({
+    scope: "openid profile email",
+    onSuccess: (tokenResponse) => {
+      mutation.mutate({
+        accessToken: tokenResponse.access_token,
+      });
+    },
+    onError: () => {
+      toast.error("Google login cancelled");
+    },
+  });
+
+  return {
+    googleLogin,
+    isPending: mutation.isPending,
+  };
+};
 // =================== LOGOUT ===================
 const logoutAdminApi = async () => {
   const res = await axiosInstance.post("/admin/logout");

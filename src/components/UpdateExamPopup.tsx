@@ -32,13 +32,23 @@ const UpdateExamPopup = ({ exam, onClose, onUpdate }: UpdateExamPopupProps) => {
   const [endTime, setEndTime] = useState(formatDateTimeLocal(exam.endTime));
   const [isEditing, setIsEditing] = useState(false);
   const [isPublished, setIsPublished] = useState<boolean>(!!exam.isPublished);
+  const [microphoneRequired, setMicrophoneRequired] = useState<boolean>(!!exam.microphoneRequired);
+  const [faceDetectionRequired, setFaceDetectionRequired] = useState<boolean>(!!exam.faceDetectionRequired);
 
   // Check if any changes were made
   const hasChanges = () => {
     const originalStart = formatDateTimeLocal(exam.startTime);
     const originalEnd = formatDateTimeLocal(exam.endTime);
     const originalPublished = !!exam.isPublished;
-    return startTime !== originalStart || endTime !== originalEnd || isPublished !== originalPublished;
+    const originalMicrophone = !!exam.microphoneRequired;
+    const originalFaceDetection = !!exam.faceDetectionRequired;
+    return (
+      startTime !== originalStart ||
+      endTime !== originalEnd ||
+      isPublished !== originalPublished ||
+      microphoneRequired !== originalMicrophone ||
+      faceDetectionRequired !== originalFaceDetection
+    );
   };
 
   const handleUpdate = () => {
@@ -71,6 +81,8 @@ const UpdateExamPopup = ({ exam, onClose, onUpdate }: UpdateExamPopupProps) => {
       startTime: startTime,
       endTime: endTime,
       isPublished: isPublished,
+      microphoneRequired: microphoneRequired,
+      faceDetectionRequired: faceDetectionRequired,
     };
 
     onUpdate(updateData);
@@ -82,6 +94,8 @@ const UpdateExamPopup = ({ exam, onClose, onUpdate }: UpdateExamPopupProps) => {
       setStartTime(formatDateTimeLocal(exam.startTime));
       setEndTime(formatDateTimeLocal(exam.endTime));
       setIsPublished(!!exam.isPublished);
+      setMicrophoneRequired(!!exam.microphoneRequired);
+      setFaceDetectionRequired(!!exam.faceDetectionRequired);
     }
     setIsEditing(!isEditing);
   };
@@ -91,16 +105,27 @@ const UpdateExamPopup = ({ exam, onClose, onUpdate }: UpdateExamPopupProps) => {
       <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto scrollbar-hide">
         {/* Header */}
         <div className="sticky top-0 bg-linear-to-r from-blue-600 to-blue-700 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold">Update Exam Schedule</h2>
-            <p className="text-blue-100 text-sm mt-1">Modify exam start and end times</p>
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold">Update Exam</h2>
+            <p className="text-blue-100 text-sm mt-1">Modify exam schedule and settings</p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-          >
-            <X size={24} />
-          </button>
+          <div className="flex items-center gap-3">
+            {!isEditing && (
+              <button
+                onClick={toggleEdit}
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors font-medium flex items-center gap-2 border border-white/20"
+              >
+                <Edit2 size={18} />
+                Edit
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            >
+              <X size={24} />
+            </button>
+          </div>
         </div>
 
         <div className="p-6 space-y-6">
@@ -154,32 +179,6 @@ const UpdateExamPopup = ({ exam, onClose, onUpdate }: UpdateExamPopupProps) => {
                 <p className="text-gray-900 font-semibold mt-1">{exam.questionCount || 0} questions</p>
               </div>
 
-              {/* Publish Toggle */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Publish Exam
-                </label>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => isEditing && setIsPublished((v) => !v)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      isPublished ? 'bg-green-600' : 'bg-gray-300'
-                    } ${!isEditing ? 'opacity-60 cursor-not-allowed' : ''}`}
-                    aria-pressed={isPublished}
-                    aria-label="Toggle publish"
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        isPublished ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                  <span className="text-sm text-gray-700">
-                    {isPublished ? 'Published (students can see this exam)' : 'Unpublished (hidden from students)'}
-                  </span>
-                </div>
-              </div>
             </div>
 
             {/* Description */}
@@ -197,49 +196,17 @@ const UpdateExamPopup = ({ exam, onClose, onUpdate }: UpdateExamPopupProps) => {
                 <p className="text-gray-700 mt-1 text-sm">{exam.instructions}</p>
               </div>
             )}
-
-            {/* Proctoring Settings */}
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <label className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2 block">Proctoring Settings</label>
-              <div className="flex flex-wrap gap-3">
-                <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
-                  exam.microphoneRequired
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-600'
-                }`}>
-                  <Mic size={14} />
-                  Microphone {exam.microphoneRequired ? 'Required' : 'Not Required'}
-                </span>
-                <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
-                  exam.faceDetectionRequired
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-600'
-                }`}>
-                  <Camera size={14} />
-                  Face Detection {exam.faceDetectionRequired ? 'Required' : 'Not Required'}
-                </span>
-              </div>
-            </div>
           </div>
 
-          {/* Editable Time Section */}
+          {/* Editable Settings Section */}
           <div className={`bg-white rounded-xl p-5 border-2 shadow-sm transition-all ${
             isEditing ? 'border-blue-400 shadow-blue-100' : 'border-gray-200'
           }`}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
                 <Calendar size={20} className="text-blue-600" />
-                Update Exam Schedule
+                Exam Settings
               </h3>
-              {!isEditing && (
-                <button
-                  onClick={toggleEdit}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
-                >
-                  <Edit2 size={16} />
-                  Edit Schedule
-                </button>
-              )}
             </div>
 
             {/* Alert - Only show in edit mode */}
@@ -248,7 +215,7 @@ const UpdateExamPopup = ({ exam, onClose, onUpdate }: UpdateExamPopupProps) => {
                 <AlertCircle size={20} className="text-yellow-600 shrink-0 mt-0.5" />
                 <div className="text-sm text-yellow-800">
                   <p className="font-medium">Important:</p>
-                  <p className="mt-1">Only exam schedule can be updated. Start time must be in the future and end time must be after start time.</p>
+                  <p className="mt-1">Start time must be in the future and end time must be after start time.</p>
                 </div>
               </div>
             )}
@@ -301,10 +268,88 @@ const UpdateExamPopup = ({ exam, onClose, onUpdate }: UpdateExamPopupProps) => {
               </div>
             </div>
 
+            {/* Publish Toggle */}
+            <div className="pt-4 border-t border-gray-200">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Publish Exam
+              </label>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => isEditing && setIsPublished((v) => !v)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    isPublished ? 'bg-green-600' : 'bg-gray-300'
+                  } ${!isEditing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                  disabled={!isEditing}
+                  aria-pressed={isPublished}
+                  aria-label="Toggle publish"
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      isPublished ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+                <span className="text-sm text-gray-700">
+                  {isPublished ? 'Published (students can see this exam)' : 'Unpublished (hidden from students)'}
+                </span>
+              </div>
+            </div>
+
+            {/* Proctoring Settings */}
+            <div className="pt-4 border-t border-gray-200">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Proctoring Settings
+              </label>
+              <div className="space-y-3">
+                {/* Microphone Required */}
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="microphoneRequired"
+                    checked={microphoneRequired}
+                    onChange={(e) => isEditing && setMicrophoneRequired(e.target.checked)}
+                    disabled={!isEditing}
+                    className={`w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 ${
+                      !isEditing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                    }`}
+                  />
+                  <label
+                    htmlFor="microphoneRequired"
+                    className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer"
+                  >
+                    <Mic size={16} className="text-blue-600" />
+                    Microphone Required
+                  </label>
+                </div>
+
+                {/* Face Detection Required */}
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="faceDetectionRequired"
+                    checked={faceDetectionRequired}
+                    onChange={(e) => isEditing && setFaceDetectionRequired(e.target.checked)}
+                    disabled={!isEditing}
+                    className={`w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 ${
+                      !isEditing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                    }`}
+                  />
+                  <label
+                    htmlFor="faceDetectionRequired"
+                    className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer"
+                  >
+                    <Camera size={16} className="text-blue-600" />
+                    Face Detection Required
+                  </label>
+                </div>
+              </div>
+            </div>
+
             {/* New Schedule Preview - Only show when editing and changes exist */}
             {isEditing && hasChanges() && (
               <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm font-medium text-blue-900 mb-2">New Schedule Preview:</p>
+                <p className="text-sm font-medium text-blue-900 mb-2">Changes Preview:</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                   <div className="flex items-center gap-2 text-blue-800">
                     <Calendar size={16} />

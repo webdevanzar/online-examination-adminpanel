@@ -1,8 +1,11 @@
 import { useState, useMemo } from "react";
-import { Search, Users as UsersIcon, ArrowUpDown } from "lucide-react";
+import { Search, Users as UsersIcon, ArrowUpDown, Edit2, Trash2, Key } from "lucide-react";
 import Table from "../components/Table";
-import { useGetAllStudents } from "../services/student";
-import { getInitials, debounce, sortByField } from "../utils/helpers";
+import { useGetAllStudents, useDeleteStudent, type Student } from "../services/student";
+import { getInitials, sortByField } from "../utils/helpers";
+import { StudentEditModal } from "../components/StudentEditModal";
+import { DeleteConfirmationModal } from "../components/DeleteConfirmationModal";
+import { PasswordResetModal } from "../components/PasswordResetModal";
 
 type SortField = "fullName" | "email" | "createdAt";
 type SortDirection = "asc" | "desc";
@@ -12,7 +15,14 @@ export const Students: React.FC = () => {
   const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
+  // Modal states
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+
   const { data: students, isLoading, error } = useGetAllStudents();
+  const deleteMutation = useDeleteStudent();
 
   // Handle sort
   const handleSort = (field: SortField) => {
@@ -40,6 +50,33 @@ export const Students: React.FC = () => {
 
     return filtered;
   }, [students, search, sortField, sortDirection]);
+
+  // Handlers
+  const handleEdit = (student: Student) => {
+    setSelectedStudent(student);
+    setEditModalOpen(true);
+  };
+
+  const handleDelete = (student: Student) => {
+    setSelectedStudent(student);
+    setDeleteModalOpen(true);
+  };
+
+  const handlePasswordReset = (student: Student) => {
+    setSelectedStudent(student);
+    setPasswordModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (selectedStudent) {
+      deleteMutation.mutate(selectedStudent.id, {
+        onSuccess: () => {
+          setDeleteModalOpen(false);
+          setSelectedStudent(null);
+        },
+      });
+    }
+  };
 
   return (
     <div className="animate-fadeIn">
@@ -145,9 +182,9 @@ export const Students: React.FC = () => {
         </div>
       ) : (
         <Table
-          fields={["SL No", "Profile", "Name", "Email", "Phone", "Joined"]}
+          fields={["SL No", "Profile", "Name", "Email", "Phone", "Joined", "Actions"]}
           data={filteredAndSortedStudents}
-          formatRow={(student: any, i: number) => (
+          formatRow={(student: Student, i: number) => (
             <>
               <td className="p-4 text-gray-700 whitespace-nowrap">{i + 1}</td>
               <td className="p-4 whitespace-nowrap">
@@ -179,10 +216,60 @@ export const Students: React.FC = () => {
                   day: "numeric",
                 })}
               </td>
+              <td className="p-4 whitespace-nowrap">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEdit(student)}
+                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Edit student"
+                  >
+                    <Edit2 size={18} />
+                  </button>
+                  <button
+                    onClick={() => handlePasswordReset(student)}
+                    className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                    title="Reset password"
+                  >
+                    <Key size={18} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(student)}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Delete student"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </td>
             </>
           )}
           stickyHeaderOffset="0px"
         />
+      )}
+
+      {/* Modals */}
+      {selectedStudent && (
+        <>
+          <StudentEditModal
+            isOpen={editModalOpen}
+            onClose={() => setEditModalOpen(false)}
+            student={selectedStudent}
+          />
+          <DeleteConfirmationModal
+            isOpen={deleteModalOpen}
+            onClose={() => setDeleteModalOpen(false)}
+            onConfirm={confirmDelete}
+            title="Delete Student"
+            message={`Are you sure you want to delete ${selectedStudent.fullName}? This will mark the student as inactive.`}
+            isLoading={deleteMutation.isPending}
+          />
+          <PasswordResetModal
+            isOpen={passwordModalOpen}
+            onClose={() => setPasswordModalOpen(false)}
+            studentId={selectedStudent.id}
+            studentName={selectedStudent.fullName}
+          />
+        </>
       )}
     </div>
   );

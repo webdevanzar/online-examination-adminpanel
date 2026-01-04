@@ -1,9 +1,13 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, BarChart3, ArrowUpDown, CheckCircle, XCircle } from "lucide-react";
 import Table from "../components/Table";
 import { useGetAllExams } from "../services/exam";
-import { useGetExamAttempts } from "../services/attempt";
-import { formatDateTime, getStatusBadgeColor, sortByField } from "../utils/helpers";
+import {
+  useGetAttemptReview,
+  useGetExamAttempts,
+  useGradeAttempt,
+} from "../services/attempt";
+import { formatDateTime } from "../utils/helpers";
 
 type SortField = "studentName" | "score" | "submittedAt";
 type SortDirection = "asc" | "desc";
@@ -14,8 +18,11 @@ export const Results = () => {
   const [statusFilter, setStatusFilter] = useState<"all" | "pass" | "fail">("all");
   const [sortField, setSortField] = useState<SortField>("submittedAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [reviewAttemptId, setReviewAttemptId] = useState<string | null>(null);
+  const [draftMarks, setDraftMarks] = useState<Record<string, number>>({});
 
   const { data: exams, isLoading: examsLoading } = useGetAllExams();
+  const gradeAttemptMutation = useGradeAttempt();
 
   // Get attempts for the selected exam (or first exam if "all")
   const examIdForQuery = selectedExamId === "all" ? exams?.[0]?.id || "" : selectedExamId;
@@ -25,6 +32,45 @@ export const Results = () => {
     error: attemptsError,
   } = useGetExamAttempts(examIdForQuery);
 
+  const {
+    data: attemptReview,
+    isLoading: attemptReviewLoading,
+    error: attemptReviewError,
+  } = useGetAttemptReview(reviewAttemptId || "", !!reviewAttemptId);
+
+  useEffect(() => {
+    if (!attemptReview) return;
+
+    const nextDraft: Record<string, number> = {};
+    attemptReview.questions.forEach((q) => {
+      nextDraft[q.questionId] = q.marksObtained ?? 0;
+    });
+    setDraftMarks(nextDraft);
+  }, [attemptReview]);
+
+  const closeReview = () => {
+    setReviewAttemptId(null);
+    setDraftMarks({});
+  };
+
+  const saveGrading = () => {
+    if (!reviewAttemptId) return;
+    if (!attemptReview) return;
+
+    gradeAttemptMutation.mutate(
+      {
+        attemptId: reviewAttemptId,
+        answers: attemptReview.questions.map((q) => ({
+          questionId: q.questionId,
+          marksObtained: Number(draftMarks[q.questionId] ?? 0),
+        })),
+      },
+      {
+        onSuccess: () => closeReview(),
+      }
+    );
+  };
+
   // Handle sort
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -33,6 +79,12 @@ export const Results = () => {
       setSortField(field);
       setSortDirection("asc");
     }
+  };
+
+  const getIsPassed = (attempt: any) => {
+    const passingScore =
+      attempt.exam?.passingMarks ?? (attempt.exam?.totalMarks || 0) * 0.5;
+    return attempt.score >= passingScore;
   };
 
   // Filter and sort attempts
@@ -51,8 +103,7 @@ export const Results = () => {
     // Status filter
     if (statusFilter !== "all") {
       filtered = filtered.filter((attempt) => {
-        const passed =
-          attempt.score >= (attempt.exam?.passingMarks || attempt.exam?.totalMarks || 0) * 0.5;
+        const passed = getIsPassed(attempt);
         return statusFilter === "pass" ? passed : !passed;
       });
     }
@@ -98,9 +149,7 @@ export const Results = () => {
 
     filteredAndSortedAttempts.forEach((attempt) => {
       const passingScore =
-        attempt.exam?.passingMarks || attempt.exam?.totalMarks
-          ? attempt.exam.totalMarks * 0.5
-          : 0;
+        attempt.exam?.passingMarks ?? (attempt.exam?.totalMarks || 0) * 0.5;
       if (attempt.score >= passingScore) passed++;
       totalScore += attempt.score;
     });
@@ -280,13 +329,9 @@ export const Results = () => {
         </div>
       ) : (
         <Table
-          fields={["S.No", "Student Name", "Exam", "Score", "Status", "Submitted"]}
+          fields={["S.No", "Student Name", "Exam", "Score", "Status", "Submitted", "Actions"]}
           data={filteredAndSortedAttempts}
           formatRow={(attempt: any, index: number) => {
-            const passingScore =
-              attempt.exam?.passingMarks || attempt.exam?.totalMarks * 0.5;
-            const isPassed = attempt.score >= passingScore;
-
             return (
               <>
                 <td className="p-4 text-gray-700 whitespace-nowrap">{index + 1}</td>
@@ -300,34 +345,214 @@ export const Results = () => {
                   {attempt.score}/{attempt.exam?.totalMarks || 0}
                 </td>
                 <td className="p-4 whitespace-nowrap">
-                  <span
-                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      isPassed
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {isPassed ? (
-                      <>
-                        <CheckCircle size={12} /> Pass
-                      </>
-                    ) : (
-                      <>
-                        <XCircle size={12} /> Fail
-                      </>
-                    )}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        getIsPassed(attempt)
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {getIsPassed(attempt) ? (
+                        <>
+                          <CheckCircle size={12} /> Pass
+                        </>
+                      ) : (
+                        <>
+                          <XCircle size={12} /> Fail
+                        </>
+                      )}
+                    </span>
+                  </div>
+                  {attempt.gradedBy && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      Graded by {attempt.gradedBy.fullName}
+                    </div>
+                  )}
                 </td>
                 <td className="p-4 text-gray-600 whitespace-nowrap text-sm">
                   {attempt.submittedAt
                     ? formatDateTime(attempt.submittedAt)
                     : "Not submitted"}
                 </td>
+                <td className="p-4 whitespace-nowrap">
+                  <button
+                    onClick={() => setReviewAttemptId(attempt.id)}
+                    className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50"
+                    disabled={!attempt.isSubmitted}
+                  >
+                    Review
+                  </button>
+                </td>
               </>
             );
           }}
           stickyHeaderOffset="0px"
         />
+      )}
+
+      {reviewAttemptId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-5xl bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Review Answers</h3>
+                {attemptReview?.attempt && (
+                  <p className="text-sm text-gray-600 mt-0.5">
+                    {attemptReview.attempt.student.fullName} • {attemptReview.attempt.exam.title}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={closeReview}
+                className="px-3 py-1.5 text-sm font-semibold rounded-lg border border-gray-300 hover:bg-gray-50"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="max-h-[75vh] overflow-auto">
+              {attemptReviewLoading ? (
+                <div className="p-6 text-sm text-gray-600">Loading attempt review...</div>
+              ) : attemptReviewError ? (
+                <div className="p-6 text-sm text-red-700">
+                  Failed to load answers. Please try again.
+                </div>
+              ) : !attemptReview ? (
+                <div className="p-6 text-sm text-gray-600">No data.</div>
+              ) : (
+                <div className="p-6 space-y-4">
+                  {attemptReview.questions.map((q, idx) => {
+                    const maxMarks = q.marks;
+                    const current = draftMarks[q.questionId] ?? 0;
+
+                    return (
+                      <div
+                        key={q.questionId}
+                        className="border border-gray-200 rounded-xl p-4"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">
+                              Q{idx + 1}. {q.questionText}
+                            </p>
+                            <p className="text-xs text-gray-600 mt-1">
+                              Type: {q.type.toUpperCase()} • Max Marks: {maxMarks}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <label className="text-xs font-semibold text-gray-700">
+                              Marks:
+                            </label>
+                            <input
+                              type="number"
+                              min={0}
+                              max={maxMarks}
+                              value={current}
+                              onChange={(e) =>
+                                setDraftMarks((prev) => ({
+                                  ...prev,
+                                  [q.questionId]: Number(e.target.value),
+                                }))
+                              }
+                              className="w-24 px-2 py-1 border border-gray-300 rounded-lg text-sm"
+                            />
+                          </div>
+                        </div>
+
+                        {q.type === "typing" ? (
+                          <div className="mt-3">
+                            <p className="text-xs font-semibold text-gray-700 mb-1">Student Answer</p>
+                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-800 whitespace-pre-wrap">
+                              {q.studentAnswer.writtenAnswer || "(No answer)"}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <p className="text-xs font-semibold text-gray-700 mb-1">Options</p>
+                              <div className="space-y-2">
+                                {q.options.map((opt) => {
+                                  const isSelected =
+                                    String(q.studentAnswer.selectedOptionId ?? "") ===
+                                    String(opt.id);
+                                  return (
+                                    <div
+                                      key={opt.id}
+                                      className={`flex items-center justify-between gap-3 p-2 rounded-lg border text-sm ${
+                                        opt.isCorrect
+                                          ? "border-green-200 bg-green-50"
+                                          : "border-gray-200 bg-white"
+                                      }`}
+                                    >
+                                      <span className="text-gray-800">{opt.text}</span>
+                                      <span className="text-xs font-semibold">
+                                        {opt.isCorrect ? "Correct" : ""}
+                                        {isSelected ? " (Selected)" : ""}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            <div>
+                              <p className="text-xs font-semibold text-gray-700 mb-1">Quick Mark</p>
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  onClick={() =>
+                                    setDraftMarks((prev) => ({
+                                      ...prev,
+                                      [q.questionId]: 0,
+                                    }))
+                                  }
+                                  className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-300 hover:bg-gray-50"
+                                >
+                                  0
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    setDraftMarks((prev) => ({
+                                      ...prev,
+                                      [q.questionId]: maxMarks,
+                                    }))
+                                  }
+                                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-green-600 text-white hover:bg-green-700"
+                                >
+                                  Full ({maxMarks})
+                                </button>
+                              </div>
+                              <p className="text-xs text-gray-600 mt-2">
+                                For MCQ you can set full marks if the selected option is correct.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  <div className="flex items-center justify-between pt-2">
+                    <div className="text-sm text-gray-700">
+                      <span className="font-semibold">Total (Draft): </span>
+                      {Object.values(draftMarks).reduce((a, b) => a + (Number(b) || 0), 0)}
+                      /{attemptReview.attempt.exam.totalMarks}
+                    </div>
+
+                    <button
+                      onClick={saveGrading}
+                      className="px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                      disabled={gradeAttemptMutation.isPending}
+                    >
+                      {gradeAttemptMutation.isPending ? "Saving..." : "Save Grading"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

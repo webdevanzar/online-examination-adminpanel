@@ -4,7 +4,6 @@ import { Dashboard } from "./pages/Dashboard";
 import { Login } from "./pages/Login";
 import { Signup } from "./pages/Signup";
 import { Results } from "./pages/Results";
-import { Courses } from "./pages/Courses";
 import { Students } from "./pages/Students";
 import Layout from "./layouts/Layout";
 import Exams from "./pages/Exams";
@@ -13,6 +12,7 @@ import ProfilePage from "./pages/profile";
 import { ProtectedRouteAfterLogin } from "./middleware/ProtectedRouteAfterLogin";
 import { ProtectedRoute } from "./middleware/ProtectedRoute";
 import { Toaster } from "sonner";
+import { ChatBot } from "./components/ChatBot";
 
 function App() {
   return (
@@ -35,11 +35,11 @@ function App() {
               element={<AddQuestionsPage />}
             />
             <Route path="/results" element={<Results />} />
-            <Route path="/courses" element={<Courses />} />
             <Route path="/profile" element={<ProfilePage />} />
           </Route>
         </Route>
       </Routes>
+      <ChatBot/>
       <Toaster />
     </BrowserRouter>
   );

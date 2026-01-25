@@ -4,7 +4,6 @@ import {
   Users,
   FileCheck,
   BarChart3,
-  BookOpen,
   X
 } from "lucide-react";
 
@@ -14,7 +13,6 @@ const Sidebar = ({ open, setOpen }: { open: boolean; setOpen: (value: boolean) =
     { name: "Students", icon: <Users size={20} />, path: "/students" },
     { name: "Exams", icon: <FileCheck size={20} />, path: "/exam" },
     { name: "Results", icon: <BarChart3 size={20} />, path: "/results" },
-    { name: "Courses", icon: <BookOpen size={20} />, path: "/courses" },
   ];
 
   return (

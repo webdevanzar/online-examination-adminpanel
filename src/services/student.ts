@@ -24,6 +24,7 @@ export interface UpdateStudentData {
   phoneNumber?: string;
   gender?: "male" | "female" | "other";
   dob?: Date;
+  isActive?: boolean;
 }
 
 export interface ResetPasswordData {
@@ -34,7 +35,7 @@ export interface ResetPasswordData {
 export const studentKeys = {
   all: ["students"] as const,
   lists: () => [...studentKeys.all, "list"] as const,
-  list: (filters?: any) => [...studentKeys.lists(), filters] as const,
+  list: (filters?: unknown) => [...studentKeys.lists(), filters] as const,
   details: () => [...studentKeys.all, "detail"] as const,
   detail: (id: string) => [...studentKeys.details(), id] as const,
 };
@@ -118,6 +119,9 @@ export const useDeleteStudent = () => {
     },
   });
 };
+
+// =================== Activate STUDENT ===================
+
 
 // =================== RESET STUDENT PASSWORD ===================
 const resetStudentPasswordApi = async ({

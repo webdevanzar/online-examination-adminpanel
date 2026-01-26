@@ -70,12 +70,26 @@ export type AttemptReviewResponse = {
 export const attemptKeys = {
   all: ["attempts"] as const,
   lists: () => [...attemptKeys.all, "list"] as const,
-  list: (filters?: any) => [...attemptKeys.lists(), filters] as const,
+  list: (filters?: unknown) => [...attemptKeys.lists(), filters] as const,
   details: () => [...attemptKeys.all, "detail"] as const,
   detail: (id: string) => [...attemptKeys.details(), id] as const,
   byExam: (examId: string) => [...attemptKeys.all, "exam", examId] as const,
   byStudent: (studentId: string) =>
     [...attemptKeys.all, "student", studentId] as const,
+};
+
+// =================== GET ALL ATTEMPTS (ALL EXAMS) ===================
+const getAllAttemptsApi = async () => {
+  const res = await axiosInstance.get(`/admin/attempts`);
+  return res.data as ExamAttempt[];
+};
+
+export const useGetAllAttempts = (enabled = true) => {
+  return useQuery({
+    queryKey: attemptKeys.list({ scope: "all" }),
+    queryFn: getAllAttemptsApi,
+    enabled,
+  });
 };
 
 // =================== GET EXAM ATTEMPTS ===================
@@ -84,11 +98,11 @@ const getExamAttemptsApi = async (examId: string) => {
   return res.data as ExamAttempt[];
 };
 
-export const useGetExamAttempts = (examId: string) => {
+export const useGetExamAttempts = (examId: string, enabled = true) => {
   return useQuery({
     queryKey: attemptKeys.byExam(examId),
     queryFn: () => getExamAttemptsApi(examId),
-    enabled: !!examId,
+    enabled: !!examId && enabled,
   });
 };
 

@@ -1,11 +1,25 @@
 import { useState, useMemo } from "react";
-import { Search, Users as UsersIcon, ArrowUpDown, Edit2, Trash2, Key } from "lucide-react";
+import {
+  Search,
+  Users as UsersIcon,
+  ArrowUpDown,
+  Edit2,
+  Trash2,
+  Key,
+} from "lucide-react";
 import Table from "../components/Table";
-import { useGetAllStudents, useDeleteStudent, type Student } from "../services/student";
+import {
+  useGetAllStudents,
+  useDeleteStudent,
+  type Student,
+  useUpdateStudent,
+} from "../services/student";
 import { getInitials, sortByField } from "../utils/helpers";
 import { StudentEditModal } from "../components/StudentEditModal";
 import { DeleteConfirmationModal } from "../components/DeleteConfirmationModal";
 import { PasswordResetModal } from "../components/PasswordResetModal";
+import { VscActivateBreakpoints } from "react-icons/vsc";
+import { ActivateConfirmationModal } from "../components/ActivateConfirmationModal";
 
 type SortField = "fullName" | "email" | "createdAt";
 type SortDirection = "asc" | "desc";
@@ -18,11 +32,13 @@ export const Students: React.FC = () => {
   // Modal states
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [activateModalOpen, setActivateModalOpen] = useState(false);
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   const { data: students, isLoading, error } = useGetAllStudents();
   const deleteMutation = useDeleteStudent();
+  const updateMutation = useUpdateStudent();
 
   // Handle sort
   const handleSort = (field: SortField) => {
@@ -42,7 +58,7 @@ export const Students: React.FC = () => {
     let filtered = students.filter(
       (student) =>
         student.fullName.toLowerCase().includes(search.toLowerCase()) ||
-        student.email.toLowerCase().includes(search.toLowerCase())
+        student.email.toLowerCase().includes(search.toLowerCase()),
     );
 
     // Sort
@@ -72,6 +88,22 @@ export const Students: React.FC = () => {
       deleteMutation.mutate(selectedStudent.id, {
         onSuccess: () => {
           setDeleteModalOpen(false);
+          setSelectedStudent(null);
+        },
+      });
+    }
+  };
+
+  const handleActivate = (student: Student) => {
+    setSelectedStudent(student);
+    setActivateModalOpen(true);
+  };
+
+    const confirmActivate = () => {
+    if (selectedStudent) {
+      updateMutation.mutate({studentId: selectedStudent.id, data: {isActive: true}}, {
+        onSuccess: () => {
+          setActivateModalOpen(false);
           setSelectedStudent(null);
         },
       });
@@ -118,7 +150,10 @@ export const Students: React.FC = () => {
             >
               Name
               {sortField === "fullName" && (
-                <ArrowUpDown size={14} className={sortDirection === "desc" ? "rotate-180" : ""} />
+                <ArrowUpDown
+                  size={14}
+                  className={sortDirection === "desc" ? "rotate-180" : ""}
+                />
               )}
             </button>
 
@@ -132,7 +167,10 @@ export const Students: React.FC = () => {
             >
               Join Date
               {sortField === "createdAt" && (
-                <ArrowUpDown size={14} className={sortDirection === "desc" ? "rotate-180" : ""} />
+                <ArrowUpDown
+                  size={14}
+                  className={sortDirection === "desc" ? "rotate-180" : ""}
+                />
               )}
             </button>
           </div>
@@ -141,7 +179,8 @@ export const Students: React.FC = () => {
         {/* Results Count */}
         {!isLoading && students && (
           <div className="mt-4 text-sm text-gray-600">
-            Showing {filteredAndSortedStudents.length} of {students.length} students
+            Showing {filteredAndSortedStudents.length} of {students.length}{" "}
+            students
           </div>
         )}
       </div>
@@ -173,7 +212,9 @@ export const Students: React.FC = () => {
       ) : filteredAndSortedStudents.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
           <UsersIcon className="mx-auto text-gray-300 mb-4" size={64} />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No students found</h3>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            No students found
+          </h3>
           <p className="text-gray-500 text-sm">
             {search
               ? "Try adjusting your search criteria"
@@ -182,7 +223,15 @@ export const Students: React.FC = () => {
         </div>
       ) : (
         <Table
-          fields={["SL No", "Profile", "Name", "Email", "Phone", "Joined", "Actions"]}
+          fields={[
+            "SL No",
+            "Profile",
+            "Name",
+            "Email",
+            "Phone",
+            "Joined",
+            "Actions",
+          ]}
           data={filteredAndSortedStudents}
           formatRow={(student: Student, i: number) => (
             <>
@@ -205,7 +254,9 @@ export const Students: React.FC = () => {
               <td className="p-4 font-medium text-gray-900 whitespace-nowrap">
                 {student.fullName}
               </td>
-              <td className="p-4 text-gray-600 whitespace-nowrap">{student.email}</td>
+              <td className="p-4 text-gray-600 whitespace-nowrap">
+                {student.email}
+              </td>
               <td className="p-4 text-gray-600 whitespace-nowrap">
                 {student.phoneNumber || "—"}
               </td>
@@ -232,13 +283,23 @@ export const Students: React.FC = () => {
                   >
                     <Key size={18} />
                   </button>
-                  <button
-                    onClick={() => handleDelete(student)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Delete student"
-                  >
-                    <Trash2 size={18} />
-                  </button>
+                  {student.isActive ? (
+                    <button
+                      onClick={() => handleDelete(student)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete student"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleActivate(student)}
+                      className="p-2 text-green-600 hover:bg-green-50 cursor-pointer rounded-lg transition-colors"
+                      title="Delete student"
+                    >
+                      <VscActivateBreakpoints size={18} />
+                    </button>
+                  )}
                 </div>
               </td>
             </>
@@ -261,6 +322,14 @@ export const Students: React.FC = () => {
             onConfirm={confirmDelete}
             title="Delete Student"
             message={`Are you sure you want to delete ${selectedStudent.fullName}? This will mark the student as inactive.`}
+            isLoading={deleteMutation.isPending}
+          />
+          <ActivateConfirmationModal
+            isOpen={activateModalOpen}
+            onClose={() => setActivateModalOpen(false)}
+            onConfirm={confirmActivate}
+            title="Activate Student"
+            message={`Are you sure you want to activate ${selectedStudent.fullName}? This will mark the student as active.`}
             isLoading={deleteMutation.isPending}
           />
           <PasswordResetModal

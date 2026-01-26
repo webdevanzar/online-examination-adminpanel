@@ -1,12 +1,15 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Search, BarChart3, ArrowUpDown, CheckCircle, XCircle } from "lucide-react";
 import Table from "../components/Table";
+import AttemptReviewModal from "../components/AttemptReviewModal";
 import { useGetAllExams } from "../services/exam";
 import {
+  useGetAllAttempts,
   useGetAttemptReview,
   useGetExamAttempts,
   useGradeAttempt,
 } from "../services/attempt";
+import { useGetAllStudents } from "../services/student";
 import { formatDateTime } from "../utils/helpers";
 
 type SortField = "studentName" | "score" | "submittedAt";
@@ -15,22 +18,32 @@ type SortDirection = "asc" | "desc";
 export const Results = () => {
   const [search, setSearch] = useState("");
   const [selectedExamId, setSelectedExamId] = useState<string>("all");
+  const [selectedStudentId, setSelectedStudentId] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "pass" | "fail">("all");
   const [sortField, setSortField] = useState<SortField>("submittedAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [reviewAttemptId, setReviewAttemptId] = useState<string | null>(null);
-  const [draftMarks, setDraftMarks] = useState<Record<string, number>>({});
 
   const { data: exams, isLoading: examsLoading } = useGetAllExams();
+  const { data: students, isLoading: studentsLoading } = useGetAllStudents();
   const gradeAttemptMutation = useGradeAttempt();
 
-  // Get attempts for the selected exam (or first exam if "all")
-  const examIdForQuery = selectedExamId === "all" ? exams?.[0]?.id || "" : selectedExamId;
   const {
-    data: attempts,
-    isLoading: attemptsLoading,
-    error: attemptsError,
-  } = useGetExamAttempts(examIdForQuery);
+    data: allAttempts,
+    isLoading: allAttemptsLoading,
+    error: allAttemptsError,
+  } = useGetAllAttempts(selectedExamId === "all");
+
+  const {
+    data: examAttempts,
+    isLoading: examAttemptsLoading,
+    error: examAttemptsError,
+  } = useGetExamAttempts(selectedExamId, selectedExamId !== "all");
+
+  const attempts = selectedExamId === "all" ? allAttempts : examAttempts;
+  const attemptsLoading =
+    selectedExamId === "all" ? allAttemptsLoading : examAttemptsLoading;
+  const attemptsError = selectedExamId === "all" ? allAttemptsError : examAttemptsError;
 
   const {
     data: attemptReview,
@@ -38,37 +51,8 @@ export const Results = () => {
     error: attemptReviewError,
   } = useGetAttemptReview(reviewAttemptId || "", !!reviewAttemptId);
 
-  useEffect(() => {
-    if (!attemptReview) return;
-
-    const nextDraft: Record<string, number> = {};
-    attemptReview.questions.forEach((q) => {
-      nextDraft[q.questionId] = q.marksObtained ?? 0;
-    });
-    setDraftMarks(nextDraft);
-  }, [attemptReview]);
-
   const closeReview = () => {
     setReviewAttemptId(null);
-    setDraftMarks({});
-  };
-
-  const saveGrading = () => {
-    if (!reviewAttemptId) return;
-    if (!attemptReview) return;
-
-    gradeAttemptMutation.mutate(
-      {
-        attemptId: reviewAttemptId,
-        answers: attemptReview.questions.map((q) => ({
-          questionId: q.questionId,
-          marksObtained: Number(draftMarks[q.questionId] ?? 0),
-        })),
-      },
-      {
-        onSuccess: () => closeReview(),
-      }
-    );
   };
 
   // Handle sort
@@ -92,6 +76,13 @@ export const Results = () => {
     if (!attempts) return [];
 
     let filtered = attempts.filter((attempt) => attempt.isSubmitted);
+
+    // Student filter
+    if (selectedStudentId !== "all") {
+      filtered = filtered.filter(
+        (attempt) => String(attempt.student?.id ?? "") === String(selectedStudentId)
+      );
+    }
 
     // Search filter
     if (search) {
@@ -137,7 +128,7 @@ export const Results = () => {
     });
 
     return sortedData;
-  }, [attempts, search, statusFilter, sortField, sortDirection]);
+  }, [attempts, selectedStudentId, search, statusFilter, sortField, sortDirection]);
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -162,7 +153,7 @@ export const Results = () => {
     };
   }, [filteredAndSortedAttempts]);
 
-  const isLoading = examsLoading || attemptsLoading;
+  const isLoading = examsLoading || studentsLoading || attemptsLoading;
 
   return (
     <div className="animate-fadeIn">
@@ -198,7 +189,7 @@ export const Results = () => {
 
       {/* Filters */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Search */}
           <div className="relative">
             <Search
@@ -213,6 +204,21 @@ export const Results = () => {
               className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
             />
           </div>
+
+          {/* Student Filter */}
+          <select
+            value={selectedStudentId}
+            onChange={(e) => setSelectedStudentId(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            disabled={studentsLoading}
+          >
+            <option value="all">All Students</option>
+            {students?.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.fullName}
+              </option>
+            ))}
+          </select>
 
           {/* Exam Filter */}
           <select
@@ -232,7 +238,7 @@ export const Results = () => {
           {/* Status Filter */}
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
+            onChange={(e) => setStatusFilter(e.target.value as "all" | "pass" | "fail")}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
           >
             <option value="all">All Status</option>
@@ -391,169 +397,23 @@ export const Results = () => {
         />
       )}
 
-      {reviewAttemptId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-5xl bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Review Answers</h3>
-                {attemptReview?.attempt && (
-                  <p className="text-sm text-gray-600 mt-0.5">
-                    {attemptReview.attempt.student.fullName} • {attemptReview.attempt.exam.title}
-                  </p>
-                )}
-              </div>
-              <button
-                onClick={closeReview}
-                className="px-3 py-1.5 text-sm font-semibold rounded-lg border border-gray-300 hover:bg-gray-50"
-              >
-                Close
-              </button>
-            </div>
-
-            <div className="max-h-[75vh] overflow-auto">
-              {attemptReviewLoading ? (
-                <div className="p-6 text-sm text-gray-600">Loading attempt review...</div>
-              ) : attemptReviewError ? (
-                <div className="p-6 text-sm text-red-700">
-                  Failed to load answers. Please try again.
-                </div>
-              ) : !attemptReview ? (
-                <div className="p-6 text-sm text-gray-600">No data.</div>
-              ) : (
-                <div className="p-6 space-y-4">
-                  {attemptReview.questions.map((q, idx) => {
-                    const maxMarks = q.marks;
-                    const current = draftMarks[q.questionId] ?? 0;
-
-                    return (
-                      <div
-                        key={q.questionId}
-                        className="border border-gray-200 rounded-xl p-4"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <p className="text-sm font-semibold text-gray-900">
-                              Q{idx + 1}. {q.questionText}
-                            </p>
-                            <p className="text-xs text-gray-600 mt-1">
-                              Type: {q.type.toUpperCase()} • Max Marks: {maxMarks}
-                            </p>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <label className="text-xs font-semibold text-gray-700">
-                              Marks:
-                            </label>
-                            <input
-                              type="number"
-                              min={0}
-                              max={maxMarks}
-                              value={current}
-                              onChange={(e) =>
-                                setDraftMarks((prev) => ({
-                                  ...prev,
-                                  [q.questionId]: Number(e.target.value),
-                                }))
-                              }
-                              className="w-24 px-2 py-1 border border-gray-300 rounded-lg text-sm"
-                            />
-                          </div>
-                        </div>
-
-                        {q.type === "typing" ? (
-                          <div className="mt-3">
-                            <p className="text-xs font-semibold text-gray-700 mb-1">Student Answer</p>
-                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-800 whitespace-pre-wrap">
-                              {q.studentAnswer.writtenAnswer || "(No answer)"}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div>
-                              <p className="text-xs font-semibold text-gray-700 mb-1">Options</p>
-                              <div className="space-y-2">
-                                {q.options.map((opt) => {
-                                  const isSelected =
-                                    String(q.studentAnswer.selectedOptionId ?? "") ===
-                                    String(opt.id);
-                                  return (
-                                    <div
-                                      key={opt.id}
-                                      className={`flex items-center justify-between gap-3 p-2 rounded-lg border text-sm ${
-                                        opt.isCorrect
-                                          ? "border-green-200 bg-green-50"
-                                          : "border-gray-200 bg-white"
-                                      }`}
-                                    >
-                                      <span className="text-gray-800">{opt.text}</span>
-                                      <span className="text-xs font-semibold">
-                                        {opt.isCorrect ? "Correct" : ""}
-                                        {isSelected ? " (Selected)" : ""}
-                                      </span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-
-                            <div>
-                              <p className="text-xs font-semibold text-gray-700 mb-1">Quick Mark</p>
-                              <div className="flex flex-wrap gap-2">
-                                <button
-                                  onClick={() =>
-                                    setDraftMarks((prev) => ({
-                                      ...prev,
-                                      [q.questionId]: 0,
-                                    }))
-                                  }
-                                  className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-300 hover:bg-gray-50"
-                                >
-                                  0
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    setDraftMarks((prev) => ({
-                                      ...prev,
-                                      [q.questionId]: maxMarks,
-                                    }))
-                                  }
-                                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-green-600 text-white hover:bg-green-700"
-                                >
-                                  Full ({maxMarks})
-                                </button>
-                              </div>
-                              <p className="text-xs text-gray-600 mt-2">
-                                For MCQ you can set full marks if the selected option is correct.
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-
-                  <div className="flex items-center justify-between pt-2">
-                    <div className="text-sm text-gray-700">
-                      <span className="font-semibold">Total (Draft): </span>
-                      {Object.values(draftMarks).reduce((a, b) => a + (Number(b) || 0), 0)}
-                      /{attemptReview.attempt.exam.totalMarks}
-                    </div>
-
-                    <button
-                      onClick={saveGrading}
-                      className="px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-                      disabled={gradeAttemptMutation.isPending}
-                    >
-                      {gradeAttemptMutation.isPending ? "Saving..." : "Save Grading"}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <AttemptReviewModal
+        isOpen={!!reviewAttemptId}
+        onClose={closeReview}
+        data={attemptReview}
+        isLoading={attemptReviewLoading}
+        isError={!!attemptReviewError}
+        isSaving={gradeAttemptMutation.isPending}
+        onSave={(answers) => {
+          if (!reviewAttemptId) return;
+          gradeAttemptMutation.mutate(
+            { attemptId: reviewAttemptId, answers },
+            {
+              onSuccess: () => closeReview(),
+            }
+          );
+        }}
+      />
     </div>
   );
 };

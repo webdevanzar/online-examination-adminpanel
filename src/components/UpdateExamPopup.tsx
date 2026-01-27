@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calendar, Clock, BookOpen, Award, Mic, Camera, AlertCircle, X, Check, Edit2 } from "lucide-react";
+import { Calendar, Clock, BookOpen, Award, AlertCircle, X, Check, Edit2 } from "lucide-react";
 import type { Exam, UpdateExamData } from "../services/exam";
 
 interface UpdateExamPopupProps {
@@ -296,55 +296,7 @@ const UpdateExamPopup = ({ exam, onClose, onUpdate }: UpdateExamPopupProps) => {
               </div>
             </div>
 
-            {/* Proctoring Settings */}
-            <div className="pt-4 border-t border-gray-200">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Proctoring Settings
-              </label>
-              <div className="space-y-3">
-                {/* Microphone Required */}
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    id="microphoneRequired"
-                    checked={microphoneRequired}
-                    onChange={(e) => isEditing && setMicrophoneRequired(e.target.checked)}
-                    disabled={!isEditing}
-                    className={`w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 ${
-                      !isEditing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
-                    }`}
-                  />
-                  <label
-                    htmlFor="microphoneRequired"
-                    className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer"
-                  >
-                    <Mic size={16} className="text-blue-600" />
-                    Microphone Required
-                  </label>
-                </div>
-
-                {/* Face Detection Required */}
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    id="faceDetectionRequired"
-                    checked={faceDetectionRequired}
-                    onChange={(e) => isEditing && setFaceDetectionRequired(e.target.checked)}
-                    disabled={!isEditing}
-                    className={`w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 ${
-                      !isEditing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
-                    }`}
-                  />
-                  <label
-                    htmlFor="faceDetectionRequired"
-                    className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer"
-                  >
-                    <Camera size={16} className="text-blue-600" />
-                    Face Detection Required
-                  </label>
-                </div>
-              </div>
-            </div>
+    
 
             {/* New Schedule Preview - Only show when editing and changes exist */}
             {isEditing && hasChanges() && (

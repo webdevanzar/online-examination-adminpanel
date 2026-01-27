@@ -63,22 +63,22 @@ const CreateExamPopup = ({ onClose, onSave }: CreateExamPopupProps) => {
     ],
   });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const target = e.target;
-    const name = target.name as keyof CreateExamData;
-    const value = ((): string | number | boolean => {
-      if (target instanceof HTMLInputElement && target.type === "checkbox") {
-        return target.checked;
-      }
-      return target.value;
-    })();
-    setForm((prev) => ({
-      ...prev,
-      [name]: value as CreateExamData[typeof name],
-    }));
-  };
+  // const handleChange = (
+  //   e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  // ) => {
+  //   const target = e.target;
+  //   const name = target.name as keyof CreateExamData;
+  //   const value = ((): string | number | boolean => {
+  //     if (target instanceof HTMLInputElement && target.type === "checkbox") {
+  //       return target.checked;
+  //     }
+  //     return target.value;
+  //   })();
+  //   setForm((prev) => ({
+  //     ...prev,
+  //     [name]: value as CreateExamData[typeof name],
+  //   }));
+  // };
 
   const ExamSchema = z
     .object({
@@ -180,7 +180,7 @@ const CreateExamPopup = ({ onClose, onSave }: CreateExamPopupProps) => {
             />
           </div>
         </FormProvider>
-
+{/* 
         <textarea
           name="description"
           placeholder="Exam Description"
@@ -195,30 +195,8 @@ const CreateExamPopup = ({ onClose, onSave }: CreateExamPopupProps) => {
           value={form.instructions}
           onChange={handleChange}
           className="border p-3 rounded-lg w-full mt-2 h-20"
-        ></textarea>
+        ></textarea> */}
 
-        {/* SETTINGS */}
-        <div className="flex gap-6 mt-3">
-          <label className="flex gap-2 items-center">
-            <input
-              type="checkbox"
-              name="microphoneRequired"
-              checked={form.microphoneRequired}
-              onChange={handleChange}
-            />
-            Microphone Required
-          </label>
-
-          <label className="flex gap-2 items-center">
-            <input
-              type="checkbox"
-              name="faceDetectionRequired"
-              checked={form.faceDetectionRequired}
-              onChange={handleChange}
-            />
-            Face Detection Required
-          </label>
-        </div>
 
         {/* FOOTER */}
         <div className="flex justify-end mt-6 gap-4">

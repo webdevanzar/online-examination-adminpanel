@@ -58,11 +58,18 @@ export const Table = <T,>({
         <tr>
           <td
             colSpan={fields.length}
-            className="text-center py-16 px-4 bg-red-50"
+            className="text-center py-20 px-4 bg-red-50/30"
           >
-            <div className="flex flex-col items-center justify-center gap-2">
-              <p className="text-sm font-semibold text-red-700">Error</p>
-              <p className="text-sm text-red-600">{error}</p>
+            <div className="flex flex-col items-center justify-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-red-100 flex items-center justify-center text-red-600 font-bold mb-2">
+                !
+              </div>
+              <p className="text-lg font-black text-red-900 tracking-tight">
+                Something went wrong
+              </p>
+              <p className="text-sm text-red-600 font-medium max-w-xs mx-auto">
+                {error}
+              </p>
             </div>
           </td>
         </tr>
@@ -74,14 +81,17 @@ export const Table = <T,>({
         <tr>
           <td
             colSpan={fields.length}
-            className="text-center py-16 px-4 bg-gray-50"
+            className="text-center py-24 px-4 bg-white"
           >
-            <div className="flex flex-col items-center justify-center gap-2">
-              <p className="text-sm font-medium text-gray-600">
+            <div className="flex flex-col items-center justify-center gap-3">
+              <div className="w-16 h-16 rounded-3xl bg-slate-50 flex items-center justify-center text-slate-300 font-bold mb-2">
+                ?
+              </div>
+              <p className="text-xl font-black text-slate-900 tracking-tight">
                 No data available
               </p>
-              <p className="text-xs text-gray-500">
-                There are no records to display
+              <p className="text-sm text-slate-500 font-medium tracking-wide">
+                There are no records to display at this time.
               </p>
             </div>
           </td>
@@ -93,11 +103,11 @@ export const Table = <T,>({
       <tr
         key={index}
         onClick={() => onRowClick?.(item, index)}
-        className={
+        className={`group transition-all duration-200 border-b border-slate-50 last:border-0 ${
           onRowClick
-            ? "hover:bg-gray-50 cursor-pointer transition-colors duration-150"
-            : ""
-        }
+            ? "hover:bg-slate-50/80 cursor-pointer active:scale-[0.995]"
+            : "hover:bg-slate-50/50"
+        }`}
       >
         {formatRow(item, index)}
       </tr>
@@ -105,29 +115,41 @@ export const Table = <T,>({
   };
 
   return (
-    <div className="w-full bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
+    <div className="w-full bg-white border border-slate-100 rounded-4xl shadow-2xl shadow-slate-200/50 overflow-hidden">
       <div
         ref={scrollContainerRef}
-        className="w-full overflow-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+        className="w-full overflow-auto scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent"
         style={{ maxHeight }}
       >
-        <table className="w-full border-collapse min-w-[850px]">
+        <table className="w-full border-collapse min-w-[900px]">
           <thead
-            className="bg-gray-100 border-b-2 border-gray-300 sticky z-10 shadow-sm"
+            className="bg-slate-50/50 border-b border-slate-100 sticky z-10 backdrop-blur-md"
             style={{ top: stickyHeaderOffset }}
           >
             <tr>
               {fields.map((field: string, index: number) => (
                 <th
                   key={index}
-                  className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200 last:border-r-0 whitespace-nowrap"
+                  className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap"
                 >
-                  {field}
+                  <span className="relative inline-block">{field}</span>
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">{renderBody()}</tbody>
+          <tbody className="bg-white">
+            {renderBody()}
+            {isLoadingMore && (
+              <tr>
+                <td colSpan={fields.length} className="p-4 text-center">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-full text-xs font-bold text-slate-500 animate-pulse">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-ping" />
+                    Loading more...
+                  </div>
+                </td>
+              </tr>
+            )}
+          </tbody>
         </table>
       </div>
     </div>

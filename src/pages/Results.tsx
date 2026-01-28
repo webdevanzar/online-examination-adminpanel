@@ -1,5 +1,11 @@
 import { useState, useMemo } from "react";
-import { Search, BarChart3, ArrowUpDown, CheckCircle, XCircle } from "lucide-react";
+import {
+  Search,
+  BarChart3,
+  ArrowUpDown,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
 import Table from "../components/Table";
 import AttemptReviewModal from "../components/AttemptReviewModal";
 import { useGetAllExams } from "../services/exam";
@@ -19,7 +25,9 @@ export const Results = () => {
   const [search, setSearch] = useState("");
   const [selectedExamId, setSelectedExamId] = useState<string>("all");
   const [selectedStudentId, setSelectedStudentId] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "pass" | "fail">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pass" | "fail">(
+    "all",
+  );
   const [sortField, setSortField] = useState<SortField>("submittedAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [reviewAttemptId, setReviewAttemptId] = useState<string | null>(null);
@@ -28,22 +36,15 @@ export const Results = () => {
   const { data: students, isLoading: studentsLoading } = useGetAllStudents();
   const gradeAttemptMutation = useGradeAttempt();
 
-  const {
-    data: allAttempts,
-    isLoading: allAttemptsLoading,
-    error: allAttemptsError,
-  } = useGetAllAttempts(selectedExamId === "all");
+  const { data: allAttempts, isLoading: allAttemptsLoading } =
+    useGetAllAttempts(selectedExamId === "all");
 
-  const {
-    data: examAttempts,
-    isLoading: examAttemptsLoading,
-    error: examAttemptsError,
-  } = useGetExamAttempts(selectedExamId, selectedExamId !== "all");
+  const { data: examAttempts, isLoading: examAttemptsLoading } =
+    useGetExamAttempts(selectedExamId, selectedExamId !== "all");
 
   const attempts = selectedExamId === "all" ? allAttempts : examAttempts;
-  const attemptsLoading =
+  const isLoadingBody =
     selectedExamId === "all" ? allAttemptsLoading : examAttemptsLoading;
-  const attemptsError = selectedExamId === "all" ? allAttemptsError : examAttemptsError;
 
   const {
     data: attemptReview,
@@ -80,14 +81,15 @@ export const Results = () => {
     // Student filter
     if (selectedStudentId !== "all") {
       filtered = filtered.filter(
-        (attempt) => String(attempt.student?.id ?? "") === String(selectedStudentId)
+        (attempt) =>
+          String(attempt.student?.id ?? "") === String(selectedStudentId),
       );
     }
 
     // Search filter
     if (search) {
       filtered = filtered.filter((attempt) =>
-        attempt.student?.fullName.toLowerCase().includes(search.toLowerCase())
+        attempt.student?.fullName.toLowerCase().includes(search.toLowerCase()),
       );
     }
 
@@ -128,11 +130,19 @@ export const Results = () => {
     });
 
     return sortedData;
-  }, [attempts, selectedStudentId, search, statusFilter, sortField, sortDirection]);
+  }, [
+    attempts,
+    selectedStudentId,
+    search,
+    statusFilter,
+    sortField,
+    sortDirection,
+  ]);
 
   // Calculate statistics
   const stats = useMemo(() => {
-    if (!filteredAndSortedAttempts.length) return { total: 0, passed: 0, failed: 0, avgScore: 0 };
+    if (!filteredAndSortedAttempts.length)
+      return { total: 0, passed: 0, failed: 0, avgScore: 0 };
 
     const total = filteredAndSortedAttempts.length;
     let passed = 0;
@@ -153,55 +163,76 @@ export const Results = () => {
     };
   }, [filteredAndSortedAttempts]);
 
-  const isLoading = examsLoading || studentsLoading || attemptsLoading;
+  const isLoading = examsLoading || studentsLoading || isLoadingBody;
 
   return (
     <div className="animate-fadeIn">
       {/* Header */}
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900">Exam Results</h2>
-        <p className="text-gray-500 text-sm mt-1">
-          Review student performance and exam results
+      <div className="mb-10">
+        <h2 className="text-4xl font-black text-slate-900 tracking-tight">
+          Performance &{" "}
+          <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-indigo-600">
+            Results
+          </span>
+        </h2>
+        <p className="text-slate-500 font-bold mt-2 uppercase tracking-widest text-xs">
+          Analyze student performance and review examination attempts
         </p>
       </div>
 
       {/* Statistics Cards */}
       {!isLoading && filteredAndSortedAttempts.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <p className="text-gray-500 text-sm font-medium">Total Attempts</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg transition-shadow">
+            <p className="text-slate-500 text-xs font-black uppercase tracking-widest">
+              Total Attempts
+            </p>
+            <p className="text-3xl font-black text-slate-900 mt-2">
+              {stats.total}
+            </p>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <p className="text-gray-500 text-sm font-medium">Passed</p>
-            <p className="text-2xl font-bold text-green-600 mt-1">{stats.passed}</p>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg transition-shadow">
+            <p className="text-slate-500 text-xs font-black uppercase tracking-widest">
+              Passed
+            </p>
+            <p className="text-3xl font-black text-emerald-600 mt-2">
+              {stats.passed}
+            </p>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <p className="text-gray-500 text-sm font-medium">Failed</p>
-            <p className="text-2xl font-bold text-red-600 mt-1">{stats.failed}</p>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg transition-shadow">
+            <p className="text-slate-500 text-xs font-black uppercase tracking-widest">
+              Failed
+            </p>
+            <p className="text-3xl font-black text-red-600 mt-2">
+              {stats.failed}
+            </p>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <p className="text-gray-500 text-sm font-medium">Average Score</p>
-            <p className="text-2xl font-bold text-blue-600 mt-1">{stats.avgScore}</p>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg transition-shadow">
+            <p className="text-slate-500 text-xs font-black uppercase tracking-widest">
+              Average Score
+            </p>
+            <p className="text-3xl font-black text-blue-600 mt-2 text-linear-to-r from-blue-600 to-indigo-600">
+              {stats.avgScore}
+            </p>
           </div>
         </div>
       )}
 
       {/* Filters */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="bg-white p-8 rounded-4xl shadow-sm border border-slate-100 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {/* Search */}
           <div className="relative">
             <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              size={18}
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"
+              size={20}
             />
             <input
               type="text"
               placeholder="Search by student name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium"
             />
           </div>
 
@@ -209,7 +240,7 @@ export const Results = () => {
           <select
             value={selectedStudentId}
             onChange={(e) => setSelectedStudentId(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium appearance-none cursor-pointer"
             disabled={studentsLoading}
           >
             <option value="all">All Students</option>
@@ -224,7 +255,7 @@ export const Results = () => {
           <select
             value={selectedExamId}
             onChange={(e) => setSelectedExamId(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium appearance-none cursor-pointer"
             disabled={examsLoading}
           >
             <option value="all">All Exams</option>
@@ -238,8 +269,10 @@ export const Results = () => {
           {/* Status Filter */}
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as "all" | "pass" | "fail")}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            onChange={(e) =>
+              setStatusFilter(e.target.value as "all" | "pass" | "fail")
+            }
+            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium appearance-none cursor-pointer"
           >
             <option value="all">All Status</option>
             <option value="pass">Passed</option>
@@ -248,153 +281,174 @@ export const Results = () => {
         </div>
 
         {/* Sort Buttons */}
-        <div className="flex gap-2 mt-4 flex-wrap">
+        <div className="flex gap-3 mt-8 flex-wrap">
           <button
             onClick={() => handleSort("studentName")}
-            className={`px-4 py-2 rounded-lg border transition-all duration-200 flex items-center gap-2 text-sm ${
+            className={`px-6 py-3 rounded-2xl border transition-all duration-300 flex items-center gap-2 text-sm font-bold ${
               sortField === "studentName"
-                ? "bg-blue-50 border-blue-500 text-blue-700"
-                : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20"
+                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
             }`}
           >
             Student Name
             {sortField === "studentName" && (
-              <ArrowUpDown size={14} className={sortDirection === "desc" ? "rotate-180" : ""} />
+              <ArrowUpDown
+                size={14}
+                className={sortDirection === "desc" ? "rotate-180" : ""}
+              />
             )}
           </button>
 
           <button
             onClick={() => handleSort("score")}
-            className={`px-4 py-2 rounded-lg border transition-all duration-200 flex items-center gap-2 text-sm ${
+            className={`px-6 py-3 rounded-2xl border transition-all duration-300 flex items-center gap-2 text-sm font-bold ${
               sortField === "score"
-                ? "bg-blue-50 border-blue-500 text-blue-700"
-                : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20"
+                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
             }`}
           >
             Score
             {sortField === "score" && (
-              <ArrowUpDown size={14} className={sortDirection === "desc" ? "rotate-180" : ""} />
+              <ArrowUpDown
+                size={14}
+                className={sortDirection === "desc" ? "rotate-180" : ""}
+              />
             )}
           </button>
 
           <button
             onClick={() => handleSort("submittedAt")}
-            className={`px-4 py-2 rounded-lg border transition-all duration-200 flex items-center gap-2 text-sm ${
+            className={`px-6 py-3 rounded-2xl border transition-all duration-300 flex items-center gap-2 text-sm font-bold ${
               sortField === "submittedAt"
-                ? "bg-blue-50 border-blue-500 text-blue-700"
-                : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20"
+                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
             }`}
           >
             Submitted Date
             {sortField === "submittedAt" && (
-              <ArrowUpDown size={14} className={sortDirection === "desc" ? "rotate-180" : ""} />
+              <ArrowUpDown
+                size={14}
+                className={sortDirection === "desc" ? "rotate-180" : ""}
+              />
             )}
           </button>
         </div>
 
         {/* Results Count */}
         {!isLoading && attempts && (
-          <div className="mt-4 text-sm text-gray-600">
-            Showing {filteredAndSortedAttempts.length} of {attempts.filter((a) => a.isSubmitted).length} results
+          <div className="mt-6 flex items-center gap-2 text-sm">
+            <div className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full font-bold">
+              {filteredAndSortedAttempts.length}
+            </div>
+            <span className="text-slate-500 font-medium">
+              results found matching your criteria (out of{" "}
+              {attempts.filter((a) => a.isSubmitted).length} total submissions)
+            </span>
           </div>
         )}
       </div>
 
-      {/* Error State */}
-      {attemptsError && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-          <p className="text-red-800 text-sm">
-            Failed to load results. Please try refreshing the page.
-          </p>
-        </div>
-      )}
-
       {/* Table */}
       {isLoading ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-4xl shadow-sm border border-slate-100 p-6">
           <div className="space-y-4">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="animate-pulse flex items-center gap-4">
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                  <div className="h-4 bg-slate-100 rounded-xl w-1/4"></div>
+                  <div className="h-3 bg-slate-50 rounded-xl w-1/3"></div>
                 </div>
               </div>
             ))}
           </div>
         </div>
       ) : filteredAndSortedAttempts.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-          <BarChart3 className="mx-auto text-gray-300 mb-4" size={64} />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No results found</h3>
-          <p className="text-gray-500 text-sm">
+        <div className="bg-white rounded-4xl shadow-sm border border-slate-100 p-20 text-center">
+          <BarChart3 className="mx-auto text-slate-300 mb-6" size={64} />
+          <h3 className="text-2xl font-black text-slate-900 mb-2">
+            No results found
+          </h3>
+          <p className="text-slate-500 font-medium max-w-sm mx-auto">
             {search || statusFilter !== "all"
-              ? "Try adjusting your filters"
-              : "No exam attempts have been submitted yet"}
+              ? "Try adjusting your filters to find what you're looking for."
+              : "No exam attempts have been submitted yet."}
           </p>
         </div>
       ) : (
-        <Table
-          fields={["S.No", "Student Name", "Exam", "Score", "Status", "Submitted", "Actions"]}
-          data={filteredAndSortedAttempts}
-          formatRow={(attempt: any, index: number) => {
-            return (
-              <>
-                <td className="p-4 text-gray-700 whitespace-nowrap">{index + 1}</td>
-                <td className="p-4 font-medium text-gray-900 whitespace-nowrap">
-                  {attempt.student?.fullName || "Unknown"}
-                </td>
-                <td className="p-4 text-gray-600 whitespace-nowrap">
-                  {attempt.exam?.title || "Unknown"}
-                </td>
-                <td className="p-4 font-semibold text-gray-900 whitespace-nowrap">
-                  {attempt.score}/{attempt.exam?.totalMarks || 0}
-                </td>
-                <td className="p-4 whitespace-nowrap">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        getIsPassed(attempt)
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {getIsPassed(attempt) ? (
-                        <>
-                          <CheckCircle size={12} /> Pass
-                        </>
-                      ) : (
-                        <>
-                          <XCircle size={12} /> Fail
-                        </>
+        <div className="bg-white rounded-4xl shadow-sm border border-slate-100 overflow-hidden">
+          <Table
+            fields={[
+              "S.No",
+              "Student Name",
+              "Exam",
+              "Score",
+              "Status",
+              "Submitted",
+              "Actions",
+            ]}
+            data={filteredAndSortedAttempts}
+            formatRow={(attempt, index: number) => {
+              const isPassed = getIsPassed(attempt);
+              return (
+                <>
+                  <td className="p-4 text-slate-600 font-medium whitespace-nowrap">
+                    {index + 1}
+                  </td>
+                  <td className="p-4 font-bold text-slate-900 whitespace-nowrap">
+                    {attempt.student?.fullName || "Unknown"}
+                  </td>
+                  <td className="p-4 text-slate-700 font-medium whitespace-nowrap">
+                    {attempt.exam?.title || "Unknown"}
+                  </td>
+                  <td className="p-4 font-black text-slate-900 whitespace-nowrap">
+                    {attempt.score}/{attempt.exam?.totalMarks || 0}
+                  </td>
+                  <td className="p-4 whitespace-nowrap">
+                    <div className="flex flex-col gap-1">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                          isPassed
+                            ? "bg-emerald-50 text-emerald-600"
+                            : "bg-red-50 text-red-600"
+                        }`}
+                      >
+                        {isPassed ? (
+                          <>
+                            <CheckCircle size={10} /> Passed
+                          </>
+                        ) : (
+                          <>
+                            <XCircle size={10} /> Failed
+                          </>
+                        )}
+                      </span>
+                      {attempt.gradedBy && (
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          By {attempt.gradedBy.fullName}
+                        </span>
                       )}
-                    </span>
-                  </div>
-                  {attempt.gradedBy && (
-                    <div className="text-xs text-gray-500 mt-1">
-                      Graded by {attempt.gradedBy.fullName}
                     </div>
-                  )}
-                </td>
-                <td className="p-4 text-gray-600 whitespace-nowrap text-sm">
-                  {attempt.submittedAt
-                    ? formatDateTime(attempt.submittedAt)
-                    : "Not submitted"}
-                </td>
-                <td className="p-4 whitespace-nowrap">
-                  <button
-                    onClick={() => setReviewAttemptId(attempt.id)}
-                    className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50"
-                    disabled={!attempt.isSubmitted}
-                  >
-                    Review
-                  </button>
-                </td>
-              </>
-            );
-          }}
-          stickyHeaderOffset="0px"
-        />
+                  </td>
+                  <td className="p-4 text-slate-500 font-medium whitespace-nowrap text-sm">
+                    {attempt.submittedAt
+                      ? formatDateTime(attempt.submittedAt)
+                      : "Not submitted"}
+                  </td>
+                  <td className="p-4 whitespace-nowrap">
+                    <button
+                      onClick={() => setReviewAttemptId(attempt.id)}
+                      className="px-5 py-2 text-xs font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-sm hover:shadow-blue-500/20 disabled:opacity-50"
+                      disabled={!attempt.isSubmitted}
+                    >
+                      Review
+                    </button>
+                  </td>
+                </>
+              );
+            }}
+            stickyHeaderOffset="0px"
+          />
+        </div>
       )}
 
       <AttemptReviewModal
@@ -410,7 +464,7 @@ export const Results = () => {
             { attemptId: reviewAttemptId, answers },
             {
               onSuccess: () => closeReview(),
-            }
+            },
           );
         }}
       />

@@ -1,41 +1,62 @@
 import { useState } from "react";
-import { Calendar, Clock, BookOpen, Award, AlertCircle, X, Check, Edit2 } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  BookOpen,
+  Award,
+  AlertCircle,
+  X,
+  Check,
+  Edit2,
+  ShieldCheck,
+  HelpCircle,
+} from "lucide-react";
 import type { Exam, UpdateExamData } from "../services/exam";
+import Modal from "./Modal";
 
 interface UpdateExamPopupProps {
   exam: Exam;
+  isOpen: boolean; // Added for Modal consistency
   onClose: () => void;
   onUpdate: (data: UpdateExamData) => void;
 }
 
-const UpdateExamPopup = ({ exam, onClose, onUpdate }: UpdateExamPopupProps) => {
-  // Format date for datetime-local input (YYYY-MM-DDTHH:mm)
+const UpdateExamPopup = ({
+  exam,
+  isOpen,
+  onClose,
+  onUpdate,
+}: UpdateExamPopupProps) => {
   const formatDateTimeLocal = (date: Date | string) => {
     const d = new Date(date);
     const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const hours = String(d.getHours()).padStart(2, '0');
-    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
-  // Format date for display
   const formatDisplayDate = (date: Date | string) => {
-    return new Date(date).toLocaleString('en-US', {
-      dateStyle: 'medium',
-      timeStyle: 'short'
+    return new Date(date).toLocaleString("en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
     });
   };
 
-  const [startTime, setStartTime] = useState(formatDateTimeLocal(exam.startTime));
+  const [startTime, setStartTime] = useState(
+    formatDateTimeLocal(exam.startTime),
+  );
   const [endTime, setEndTime] = useState(formatDateTimeLocal(exam.endTime));
   const [isEditing, setIsEditing] = useState(false);
   const [isPublished, setIsPublished] = useState<boolean>(!!exam.isPublished);
-  const [microphoneRequired, setMicrophoneRequired] = useState<boolean>(!!exam.microphoneRequired);
-  const [faceDetectionRequired, setFaceDetectionRequired] = useState<boolean>(!!exam.faceDetectionRequired);
+  const [microphoneRequired, setMicrophoneRequired] = useState<boolean>(
+    !!exam.microphoneRequired,
+  );
+  const [faceDetectionRequired, setFaceDetectionRequired] = useState<boolean>(
+    !!exam.faceDetectionRequired,
+  );
 
-  // Check if any changes were made
   const hasChanges = () => {
     const originalStart = formatDateTimeLocal(exam.startTime);
     const originalEnd = formatDateTimeLocal(exam.endTime);
@@ -52,18 +73,14 @@ const UpdateExamPopup = ({ exam, onClose, onUpdate }: UpdateExamPopupProps) => {
   };
 
   const handleUpdate = () => {
-    // Check if there are any changes
     if (!hasChanges()) {
       alert("No changes detected");
       return;
     }
 
-    // Validation
     const start = new Date(startTime);
     const end = new Date(endTime);
     const now = new Date();
-
-    // Only validate start time is in future if it's being changed to a different time
     const originalStart = new Date(exam.startTime);
     const isStartTimeChanged = start.getTime() !== originalStart.getTime();
 
@@ -90,7 +107,6 @@ const UpdateExamPopup = ({ exam, onClose, onUpdate }: UpdateExamPopupProps) => {
 
   const toggleEdit = () => {
     if (isEditing) {
-      // Reset to original values when canceling edit
       setStartTime(formatDateTimeLocal(exam.startTime));
       setEndTime(formatDateTimeLocal(exam.endTime));
       setIsPublished(!!exam.isPublished);
@@ -101,259 +117,208 @@ const UpdateExamPopup = ({ exam, onClose, onUpdate }: UpdateExamPopupProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto scrollbar-hide">
-        {/* Header */}
-        <div className="sticky top-0 bg-linear-to-r from-blue-600 to-blue-700 text-white px-6 py-5 rounded-t-2xl flex items-center justify-between">
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold">Update Exam</h2>
-            <p className="text-blue-100 text-sm mt-1">Modify exam schedule and settings</p>
+    <Modal isOpen={isOpen} onClose={onClose} title="Update Exam" size="lg">
+      <div className="space-y-8">
+        {/* Header Section with Actions */}
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-inner">
+              <BookOpen size={24} />
+            </div>
+            <div>
+              <h4 className="text-lg font-bold text-slate-900 leading-tight">
+                {exam.title}
+              </h4>
+              <p className="text-sm text-slate-500 font-medium">
+                Subject:{" "}
+                <span className="text-blue-600 font-bold">{exam.subject}</span>
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            {!isEditing && (
-              <button
-                onClick={toggleEdit}
-                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors font-medium flex items-center gap-2 border border-white/20"
-              >
-                <Edit2 size={18} />
-                Edit
-              </button>
-            )}
+          {!isEditing && (
             <button
-              onClick={onClose}
-              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              onClick={toggleEdit}
+              className="px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl font-bold transition-all flex items-center gap-2 border border-slate-200"
             >
-              <X size={24} />
+              <Edit2 size={18} />
+              Edit Settings
             </button>
+          )}
+        </div>
+
+        {/* Read Only Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+            <div className="flex items-center gap-2 text-slate-500 font-bold text-xs uppercase tracking-wider mb-1">
+              <Clock size={14} className="text-blue-500" />
+              Duration
+            </div>
+            <div className="text-lg font-black text-slate-900">
+              {exam.duration}m
+            </div>
+          </div>
+          <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+            <div className="flex items-center gap-2 text-slate-500 font-bold text-xs uppercase tracking-wider mb-1">
+              <Award size={14} className="text-emerald-500" />
+              Total Marks
+            </div>
+            <div className="text-lg font-black text-slate-900">
+              {exam.totalMarks}
+            </div>
+          </div>
+          <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+            <div className="flex items-center gap-2 text-slate-500 font-bold text-xs uppercase tracking-wider mb-1">
+              <ShieldCheck size={14} className="text-indigo-500" />
+              Pass Score
+            </div>
+            <div className="text-lg font-black text-slate-900">
+              {exam.passingMarks}
+            </div>
+          </div>
+          <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+            <div className="flex items-center gap-2 text-slate-500 font-bold text-xs uppercase tracking-wider mb-1">
+              <HelpCircle size={14} className="text-amber-500" />
+              Questions
+            </div>
+            <div className="text-lg font-black text-slate-900">
+              {exam.questionCount || 0}
+            </div>
           </div>
         </div>
 
-        <div className="p-6 space-y-6">
-          {/* Exam Information - Read Only */}
-          <div className="bg-linear-to-br from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <BookOpen size={20} className="text-blue-600" />
-              Exam Information
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Title */}
-              <div>
-                <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Title</label>
-                <p className="text-gray-900 font-semibold mt-1">{exam.title}</p>
-              </div>
-
-              {/* Subject */}
-              <div>
-                <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Subject</label>
-                <p className="text-gray-900 font-semibold mt-1">{exam.subject}</p>
-              </div>
-
-              {/* Duration */}
-              <div>
-                <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Duration</label>
-                <p className="text-gray-900 font-semibold mt-1 flex items-center gap-2">
-                  <Clock size={16} className="text-blue-600" />
-                  {exam.duration} minutes
-                </p>
-              </div>
-
-              {/* Total Marks */}
-              <div>
-                <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Marks</label>
-                <p className="text-gray-900 font-semibold mt-1 flex items-center gap-2">
-                  <Award size={16} className="text-green-600" />
-                  {exam.totalMarks} marks
-                </p>
-              </div>
-
-              {/* Passing Marks */}
-              <div>
-                <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Passing Marks</label>
-                <p className="text-gray-900 font-semibold mt-1">{exam.passingMarks} marks</p>
-              </div>
-
-              {/* Questions */}
-              <div>
-                <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Questions</label>
-                <p className="text-gray-900 font-semibold mt-1">{exam.questionCount || 0} questions</p>
-              </div>
-
+        {/* Configurations Section */}
+        <div
+          className={`space-y-6 p-6 rounded-3xl border-2 transition-all duration-300 ${
+            isEditing
+              ? "bg-white border-blue-500/20 shadow-xl shadow-blue-500/5"
+              : "bg-slate-50/50 border-slate-100 shadow-none"
+          }`}
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div
+              className={`p-2 rounded-xl transition-colors ${isEditing ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-500"}`}
+            >
+              <Calendar size={20} />
             </div>
-
-            {/* Description */}
-            {exam.description && (
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Description</label>
-                <p className="text-gray-700 mt-1 text-sm">{exam.description}</p>
-              </div>
-            )}
-
-            {/* Instructions */}
-            {exam.instructions && (
-              <div className="mt-4">
-                <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Instructions</label>
-                <p className="text-gray-700 mt-1 text-sm">{exam.instructions}</p>
-              </div>
-            )}
+            <h4 className="font-black text-slate-900">Schedule & Settings</h4>
           </div>
 
-          {/* Editable Settings Section */}
-          <div className={`bg-white rounded-xl p-5 border-2 shadow-sm transition-all ${
-            isEditing ? 'border-blue-400 shadow-blue-100' : 'border-gray-200'
-          }`}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <Calendar size={20} className="text-blue-600" />
-                Exam Settings
-              </h3>
+          {isEditing && (
+            <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex gap-4 animate-in fade-in slide-in-from-top-2">
+              <AlertCircle size={20} className="text-amber-600 shrink-0" />
+              <p className="text-sm font-bold text-amber-800 leading-relaxed">
+                Schedule updates must be in the future. End time must follow
+                start time.
+              </p>
             </div>
+          )}
 
-            {/* Alert - Only show in edit mode */}
-            {isEditing && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 flex gap-3">
-                <AlertCircle size={20} className="text-yellow-600 shrink-0 mt-0.5" />
-                <div className="text-sm text-yellow-800">
-                  <p className="font-medium">Important:</p>
-                  <p className="mt-1">Start time must be in the future and end time must be after start time.</p>
-                </div>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Start Time */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Start Time <span className="text-red-500">*</span>
-                </label>
-                <div className="space-y-2">
-                  <div className="text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-md">
-                    Current: <span className="font-medium text-gray-700">{formatDisplayDate(exam.startTime)}</span>
-                  </div>
-                  <input
-                    type="datetime-local"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    disabled={!isEditing}
-                    className={`w-full px-4 py-2.5 border-2 rounded-lg outline-none transition-all text-gray-900 font-medium ${
-                      isEditing
-                        ? 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white'
-                        : 'border-gray-200 bg-gray-50 cursor-not-allowed'
-                    }`}
-                  />
-                </div>
-              </div>
-
-              {/* End Time */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  End Time <span className="text-red-500">*</span>
-                </label>
-                <div className="space-y-2">
-                  <div className="text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-md">
-                    Current: <span className="font-medium text-gray-700">{formatDisplayDate(exam.endTime)}</span>
-                  </div>
-                  <input
-                    type="datetime-local"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                    disabled={!isEditing}
-                    className={`w-full px-4 py-2.5 border-2 rounded-lg outline-none transition-all text-gray-900 font-medium ${
-                      isEditing
-                        ? 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white'
-                        : 'border-gray-200 bg-gray-50 cursor-not-allowed'
-                    }`}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Publish Toggle */}
-            <div className="pt-4 border-t border-gray-200">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Publish Exam
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-700 ml-1">
+                Start Time
               </label>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => isEditing && setIsPublished((v) => !v)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    isPublished ? 'bg-green-600' : 'bg-gray-300'
-                  } ${!isEditing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
-                  disabled={!isEditing}
-                  aria-pressed={isPublished}
-                  aria-label="Toggle publish"
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      isPublished ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-                <span className="text-sm text-gray-700">
-                  {isPublished ? 'Published (students can see this exam)' : 'Unpublished (hidden from students)'}
-                </span>
+              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1 leading-none">
+                Currently: {formatDisplayDate(exam.startTime)}
               </div>
+              <input
+                type="datetime-local"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                disabled={!isEditing}
+                className={`w-full bg-white border rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-black text-slate-900 ${
+                  isEditing
+                    ? "border-blue-200"
+                    : "border-slate-200 bg-slate-50 opacity-60"
+                }`}
+              />
             </div>
-
-    
-
-            {/* New Schedule Preview - Only show when editing and changes exist */}
-            {isEditing && hasChanges() && (
-              <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm font-medium text-blue-900 mb-2">Changes Preview:</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                  <div className="flex items-center gap-2 text-blue-800">
-                    <Calendar size={16} />
-                    <span className="font-medium">Start:</span>
-                    <span>{formatDisplayDate(startTime)}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-blue-800">
-                    <Calendar size={16} />
-                    <span className="font-medium">End:</span>
-                    <span>{formatDisplayDate(endTime)}</span>
-                  </div>
-                </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-700 ml-1">
+                End Time
+              </label>
+              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1 leading-none">
+                Currently: {formatDisplayDate(exam.endTime)}
               </div>
-            )}
+              <input
+                type="datetime-local"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                disabled={!isEditing}
+                className={`w-full bg-white border rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-black text-slate-900 ${
+                  isEditing
+                    ? "border-blue-200"
+                    : "border-slate-200 bg-slate-50 opacity-60"
+                }`}
+              />
+            </div>
+          </div>
+
+          <div className="pt-6 border-t border-slate-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="block text-sm font-black text-slate-900 mb-1">
+                  Visibility Status
+                </label>
+                <p className="text-xs font-bold text-slate-500 italic">
+                  {isPublished
+                    ? "Live: Students can access this exam"
+                    : "Draft: Hidden from all candidate lists"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => isEditing && setIsPublished(!isPublished)}
+                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all ${
+                  isPublished ? "bg-emerald-500" : "bg-slate-300"
+                } ${!isEditing ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:scale-105 active:scale-95"}`}
+                disabled={!isEditing}
+              >
+                <div
+                  className={`h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
+                    isPublished ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="sticky bottom-0 bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-end gap-3 border-t border-gray-200">
+        {/* Footer Actions */}
+        <div className="flex justify-stretch gap-4 pt-4 border-t border-slate-100">
           {isEditing ? (
             <>
               <button
                 onClick={toggleEdit}
-                className="px-6 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center gap-2"
+                className="flex-1 px-8 py-4 bg-slate-50 text-slate-600 rounded-2xl font-black hover:bg-slate-100 transition-all flex items-center justify-center gap-2"
               >
-                <X size={18} />
+                <X size={20} />
                 Cancel
               </button>
               <button
                 onClick={handleUpdate}
                 disabled={!hasChanges()}
-                className={`px-6 py-2.5 rounded-lg transition-colors font-medium flex items-center gap-2 ${
+                className={`flex-1 px-8 py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-2 ${
                   hasChanges()
-                    ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/30'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20 hover:bg-blue-700 transform hover:scale-[1.02] active:scale-[0.98]"
+                    : "bg-slate-100 text-slate-400 cursor-not-allowed"
                 }`}
               >
-                <Check size={18} />
-                Save Changes
+                <Check size={20} />
+                Update Exam
               </button>
             </>
           ) : (
             <button
               onClick={onClose}
-              className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
+              className="w-full px-8 py-4 bg-slate-900 text-white rounded-2xl font-black hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10"
             >
-              Close
+              Close Details
             </button>
           )}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };
 

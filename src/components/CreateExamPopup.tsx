@@ -3,6 +3,8 @@ import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { InputField } from "./InputField";
+import Modal from "./Modal";
+import { BookOpen, Clock, Award } from "lucide-react";
 
 interface CreateExamPopupProps {
   onClose: () => void;
@@ -20,7 +22,6 @@ interface CreateExamData {
   passingMarks: string | number;
   microphoneRequired: boolean;
   faceDetectionRequired: boolean;
-  // Question settings kept as-is in local state (not validated here)
   questionText: string;
   marks: string | number;
   type: string;
@@ -31,30 +32,23 @@ interface CreateExamData {
 }
 
 const CreateExamPopup = ({ onClose, onSave }: CreateExamPopupProps) => {
-  const [form, setForm] = useState({
-    // Exam Fields
+  const [form] = useState({
     title: "",
     description: "",
     subject: "",
     instructions: "",
-
     startTime: "",
     endTime: "",
     totalMarks: "",
     passingMarks: "",
-
     microphoneRequired: false,
     faceDetectionRequired: true,
-
-    // Question Fields
     questionText: "",
     marks: "",
     type: "mcq",
     hasMultipleCorrect: false,
-
     answerMinLength: "",
     answerMaxLength: "",
-
     options: [
       { text: "", isCorrect: false },
       { text: "", isCorrect: false },
@@ -62,23 +56,6 @@ const CreateExamPopup = ({ onClose, onSave }: CreateExamPopupProps) => {
       { text: "", isCorrect: false },
     ],
   });
-
-  // const handleChange = (
-  //   e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  // ) => {
-  //   const target = e.target;
-  //   const name = target.name as keyof CreateExamData;
-  //   const value = ((): string | number | boolean => {
-  //     if (target instanceof HTMLInputElement && target.type === "checkbox") {
-  //       return target.checked;
-  //     }
-  //     return target.value;
-  //   })();
-  //   setForm((prev) => ({
-  //     ...prev,
-  //     [name]: value as CreateExamData[typeof name],
-  //   }));
-  // };
 
   const ExamSchema = z
     .object({
@@ -91,14 +68,14 @@ const CreateExamPopup = ({ onClose, onSave }: CreateExamPopupProps) => {
       instructions: z.string().optional(),
       description: z.string().optional(),
     })
-    .refine(
-      (v) => new Date(v.endTime) > new Date(v.startTime),
-      { path: ["endTime"], message: "End time must be after start time" }
-    )
-    .refine(
-      (v) => v.passingMarks <= v.totalMarks,
-      { path: ["passingMarks"], message: "Passing marks cannot be greater than total marks" }
-    );
+    .refine((v) => new Date(v.endTime) > new Date(v.startTime), {
+      path: ["endTime"],
+      message: "End time must be after start time",
+    })
+    .refine((v) => v.passingMarks <= v.totalMarks, {
+      path: ["passingMarks"],
+      message: "Passing marks cannot be greater than total marks",
+    });
 
   type ExamFormInput = z.input<typeof ExamSchema>;
   type ExamFormOutput = z.output<typeof ExamSchema>;
@@ -119,113 +96,145 @@ const CreateExamPopup = ({ onClose, onSave }: CreateExamPopupProps) => {
   });
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 w-[650px] rounded-xl shadow-xl max-h-[90vh] overflow-y-auto">
-        {/* HEADER */}
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">Create Exam</h2>
-          <button onClick={onClose} className="text-xl font-bold text-gray-500">
-            ✖
-          </button>
-        </div>
-
-        {/* ---------------- EXAM FIELDS ---------------- */}
-        <h3 className="font-semibold text-lg mb-2">Exam Details</h3>
+    <Modal isOpen={true} onClose={onClose} title="Create Exam" size="lg">
+      <div className="space-y-8">
         <FormProvider {...methods}>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex items-center gap-4 mb-2">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-inner">
+              <BookOpen size={24} />
+            </div>
+            <div>
+              <h4 className="text-lg font-bold text-slate-900 leading-tight">
+                Basic Configuration
+              </h4>
+              <p className="text-sm text-slate-500 font-medium">
+                Define exam metadata and schedule
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <InputField
               name={"title"}
-              label="Title"
-              placeholder="Exam Title"
+              label="Exam Title"
+              placeholder="Ex: Midterm Biology 2024"
               rules={{ required: "Title is required" }}
             />
 
             <InputField
               name={"subject"}
-              label="Subject"
-              placeholder="Subject"
+              label="Subject / Category"
+              placeholder="Ex: Molecular Biology"
               rules={{ required: "Subject is required" }}
             />
+          </div>
 
-            <InputField
-              name={"totalMarks"}
-              label="Total Marks"
-              type="number"
-              placeholder="Total Marks"
-              rules={{ required: "Total marks is required" }}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 text-slate-900 font-bold mb-1">
+                <Clock size={18} className="text-blue-600" />
+                Schedule
+              </div>
+              <InputField
+                name={"startTime"}
+                label="Start Date & Time"
+                type="datetime-local"
+                rules={{ required: "Start time is required" }}
+              />
+              <InputField
+                name={"endTime"}
+                label="End Date & Time"
+                type="datetime-local"
+                rules={{ required: "End time is required" }}
+              />
+            </div>
 
-            <InputField
-              name={"passingMarks"}
-              label="Passing Marks"
-              type="number"
-              placeholder="Passing Marks"
-              rules={{ required: "Passing marks is required" }}
-            />
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 text-slate-900 font-bold mb-1">
+                <Award size={18} className="text-emerald-600" />
+                Grading
+              </div>
+              <InputField
+                name={"totalMarks"}
+                label="Total Possible Marks"
+                type="number"
+                placeholder="100"
+                rules={{ required: "Total marks is required" }}
+              />
+              <InputField
+                name={"passingMarks"}
+                label="Required to Pass"
+                type="number"
+                placeholder="40"
+                rules={{ required: "Passing marks is required" }}
+              />
+            </div>
+          </div>
 
-            <InputField
-              name={"startTime"}
-              label="Start Time"
-              type="datetime-local"
-              placeholder="Start"
-              rules={{ required: "Start time is required" }}
-            />
+          {/* <div className="flex items-center gap-4 mt-8 mb-2">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-inner">
+              <GraduationCap size={24} />
+            </div>
+            <div>
+              <h4 className="text-lg font-bold text-slate-900 leading-tight">
+                Exam Content
+              </h4>
+              <p className="text-sm text-slate-500 font-medium">
+                Optional additional information
+              </p>
+            </div>
+          </div>
 
-            <InputField
-              name={"endTime"}
-              label="End Time"
-              type="datetime-local"
-              placeholder="End"
-              rules={{ required: "End time is required" }}
-            />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-700 ml-1">
+                General Description
+              </label>
+              <textarea
+                {...methods.register("description")}
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium"
+                rows={3}
+                placeholder="A brief overview of the exam topic..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-700 ml-1">
+                Candidate Instructions
+              </label>
+              <textarea
+                {...methods.register("instructions")}
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium"
+                rows={3}
+                placeholder="Instructions for students (proctoring rules, etc)..."
+              />
+            </div>
+          </div> */}
+
+          <div className="flex justify-stretch gap-4 pt-4 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-8 py-4 bg-slate-50 text-slate-600 rounded-2xl font-black hover:bg-slate-100 transition-all"
+            >
+              Cancel
+            </button>
+
+            <button
+              onClick={async () => {
+                const isValid = await methods.trigger();
+                if (!isValid) return;
+                const values = methods.getValues() as ExamFormOutput;
+                onSave({ ...form, ...values });
+              }}
+              className="flex-1 px-8 py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg shadow-blue-500/20 hover:bg-blue-700 transform hover:scale-[1.02] active:scale-[0.98] transition-all"
+            >
+              Create Exam
+            </button>
           </div>
         </FormProvider>
-{/* 
-        <textarea
-          name="description"
-          placeholder="Exam Description"
-          value={form.description}
-          onChange={handleChange}
-          className="border p-3 rounded-lg w-full mt-3 h-20"
-        ></textarea>
-
-        <textarea
-          name="instructions"
-          placeholder="Instructions"
-          value={form.instructions}
-          onChange={handleChange}
-          className="border p-3 rounded-lg w-full mt-2 h-20"
-        ></textarea> */}
-
-
-        {/* FOOTER */}
-        <div className="flex justify-end mt-6 gap-4">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-300 rounded-lg"
-          >
-            Cancel
-          </button>
-
-          <button
-            onClick={async () => {
-              // Trigger form validation
-              const isValid = await methods.trigger();
-
-              if (!isValid) {
-                return; // Don't submit if form is invalid
-              }
-
-              const values = methods.getValues() as ExamFormOutput;
-              onSave({ ...form, ...values });
-            }}
-            className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Save Exam
-          </button>
-        </div>
       </div>
-    </div>
+    </Modal>
   );
 };
 

@@ -99,56 +99,64 @@ export const Students: React.FC = () => {
     setActivateModalOpen(true);
   };
 
-    const confirmActivate = () => {
+  const confirmActivate = () => {
     if (selectedStudent) {
-      updateMutation.mutate({studentId: selectedStudent.id, data: {isActive: true}}, {
-        onSuccess: () => {
-          setActivateModalOpen(false);
-          setSelectedStudent(null);
+      updateMutation.mutate(
+        { studentId: selectedStudent.id, data: { isActive: true } },
+        {
+          onSuccess: () => {
+            setActivateModalOpen(false);
+            setSelectedStudent(null);
+          },
         },
-      });
+      );
     }
   };
 
   return (
     <div className="animate-fadeIn">
       {/* Header */}
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900">Student Management</h2>
-        <p className="text-gray-500 text-sm mt-1">
-          View and manage all registered students
+      <div className="mb-10">
+        <h2 className="text-4xl font-black text-slate-900 tracking-tight">
+          Student{" "}
+          <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-indigo-600">
+            Directory
+          </span>
+        </h2>
+        <p className="text-slate-500 font-bold mt-2 uppercase tracking-widest text-xs">
+          Manage and monitor all students registered in the system
         </p>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <div className="bg-white p-8 rounded-4xl shadow-sm border border-slate-100 mb-10">
+        <div className="flex flex-col sm:flex-row gap-6">
           {/* Search */}
           <div className="flex-1 relative">
             <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              size={18}
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"
+              size={20}
             />
             <input
               type="text"
               placeholder="Search by name or email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium"
             />
           </div>
 
           {/* Sort Buttons */}
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-3 flex-wrap">
             <button
               onClick={() => handleSort("fullName")}
-              className={`px-4 py-2 rounded-lg border transition-all duration-200 flex items-center gap-2 text-sm ${
+              className={`px-6 py-3 rounded-2xl border transition-all duration-300 flex items-center gap-2 text-sm font-bold ${
                 sortField === "fullName"
-                  ? "bg-blue-50 border-blue-500 text-blue-700"
-                  : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                  ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20"
+                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
               }`}
             >
-              Name
+              Sort by Name
               {sortField === "fullName" && (
                 <ArrowUpDown
                   size={14}
@@ -159,13 +167,13 @@ export const Students: React.FC = () => {
 
             <button
               onClick={() => handleSort("createdAt")}
-              className={`px-4 py-2 rounded-lg border transition-all duration-200 flex items-center gap-2 text-sm ${
+              className={`px-6 py-3 rounded-2xl border transition-all duration-300 flex items-center gap-2 text-sm font-bold ${
                 sortField === "createdAt"
-                  ? "bg-blue-50 border-blue-500 text-blue-700"
-                  : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                  ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20"
+                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
               }`}
             >
-              Join Date
+              Sort by Date
               {sortField === "createdAt" && (
                 <ArrowUpDown
                   size={14}
@@ -176,11 +184,15 @@ export const Students: React.FC = () => {
           </div>
         </div>
 
-        {/* Results Count */}
+        {/* Results Info */}
         {!isLoading && students && (
-          <div className="mt-4 text-sm text-gray-600">
-            Showing {filteredAndSortedStudents.length} of {students.length}{" "}
-            students
+          <div className="mt-6 flex items-center gap-2 text-sm">
+            <div className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full font-bold">
+              {filteredAndSortedStudents.length}
+            </div>
+            <span className="text-slate-500 font-medium">
+              students registered in the system
+            </span>
           </div>
         )}
       </div>
@@ -222,90 +234,94 @@ export const Students: React.FC = () => {
           </p>
         </div>
       ) : (
-        <Table
-          fields={[
-            "SL No",
-            "Profile",
-            "Name",
-            "Email",
-            "Phone",
-            "Joined",
-            "Actions",
-          ]}
-          data={filteredAndSortedStudents}
-          formatRow={(student: Student, i: number) => (
-            <>
-              <td className="p-4 text-gray-700 whitespace-nowrap">{i + 1}</td>
-              <td className="p-4 whitespace-nowrap">
-                {student.profileImage ? (
-                  <img
-                    src={student.profileImage}
-                    alt={student.fullName}
-                    className="h-10 w-10 rounded-full border border-gray-200 object-cover"
-                  />
-                ) : (
-                  <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center border border-gray-200">
-                    <span className="text-blue-700 text-sm font-medium">
-                      {getInitials(student.fullName)}
-                    </span>
-                  </div>
-                )}
-              </td>
-              <td className="p-4 font-medium text-gray-900 whitespace-nowrap">
-                {student.fullName}
-              </td>
-              <td className="p-4 text-gray-600 whitespace-nowrap">
-                {student.email}
-              </td>
-              <td className="p-4 text-gray-600 whitespace-nowrap">
-                {student.phoneNumber || "—"}
-              </td>
-              <td className="p-4 text-gray-600 whitespace-nowrap text-sm">
-                {new Date(student.createdAt).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })}
-              </td>
-              <td className="p-4 whitespace-nowrap">
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(student)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                    title="Edit student"
-                  >
-                    <Edit2 size={18} />
-                  </button>
-                  <button
-                    onClick={() => handlePasswordReset(student)}
-                    className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                    title="Reset password"
-                  >
-                    <Key size={18} />
-                  </button>
-                  {student.isActive ? (
-                    <button
-                      onClick={() => handleDelete(student)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Delete student"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+        <div className="bg-white rounded-4xl shadow-sm border border-slate-100 overflow-hidden">
+          <Table
+            fields={[
+              "SL No",
+              "Profile",
+              "Name",
+              "Email",
+              "Phone",
+              "Joined",
+              "Actions",
+            ]}
+            data={filteredAndSortedStudents}
+            formatRow={(student, i: number) => (
+              <>
+                <td className="p-4 text-slate-600 font-medium whitespace-nowrap">
+                  {i + 1}
+                </td>
+                <td className="p-4 whitespace-nowrap">
+                  {student.profileImage ? (
+                    <img
+                      src={student.profileImage}
+                      alt={student.fullName}
+                      className="h-10 w-10 rounded-full border border-slate-100 object-cover"
+                    />
                   ) : (
-                    <button
-                      onClick={() => handleActivate(student)}
-                      className="p-2 text-green-600 hover:bg-green-50 cursor-pointer rounded-lg transition-colors"
-                      title="Delete student"
-                    >
-                      <VscActivateBreakpoints size={18} />
-                    </button>
+                    <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center border border-blue-100">
+                      <span className="text-blue-600 text-sm font-bold">
+                        {getInitials(student.fullName)}
+                      </span>
+                    </div>
                   )}
-                </div>
-              </td>
-            </>
-          )}
-          stickyHeaderOffset="0px"
-        />
+                </td>
+                <td className="p-4 font-bold text-slate-900 whitespace-nowrap">
+                  {student.fullName}
+                </td>
+                <td className="p-4 text-slate-500 font-medium whitespace-nowrap">
+                  {student.email}
+                </td>
+                <td className="p-4 text-slate-500 font-medium whitespace-nowrap">
+                  {student.phoneNumber || "—"}
+                </td>
+                <td className="p-4 text-slate-500 font-medium whitespace-nowrap text-sm">
+                  {new Date(student.createdAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </td>
+                <td className="p-4 whitespace-nowrap">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(student)}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
+                      title="Edit student"
+                    >
+                      <Edit2 size={18} />
+                    </button>
+                    <button
+                      onClick={() => handlePasswordReset(student)}
+                      className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors"
+                      title="Reset password"
+                    >
+                      <Key size={18} />
+                    </button>
+                    {student.isActive ? (
+                      <button
+                        onClick={() => handleDelete(student)}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                        title="Delete student"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleActivate(student)}
+                        className="p-2 text-emerald-600 hover:bg-emerald-50 cursor-pointer rounded-xl transition-colors"
+                        title="Activate student"
+                      >
+                        <VscActivateBreakpoints size={18} />
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </>
+            )}
+            stickyHeaderOffset="0px"
+          />
+        </div>
       )}
 
       {/* Modals */}

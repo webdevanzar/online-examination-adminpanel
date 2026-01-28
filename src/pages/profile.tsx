@@ -1,4 +1,15 @@
-import { Mail, Camera, Save, X, Trash2, Edit, Upload } from "lucide-react";
+import {
+  Mail,
+  Camera,
+  Save,
+  Trash2,
+  Edit,
+  Upload,
+  User,
+  ArrowLeft,
+  Shield,
+  ShieldCheck,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -12,6 +23,7 @@ import {
   useDeleteAdminProfileImage,
 } from "../services/auth";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Only allow name and email on client; image is handled as FormData file
 const ClientUpdateSchema = z.object({
@@ -29,11 +41,11 @@ type FormValues = z.infer<typeof ClientUpdateSchema> & {
 const ProfilePage = () => {
   const navigate = useNavigate();
   const { fullName, email, profileImage } = useSelector(
-    (s: RootState) => s.auth
+    (s: RootState) => s.auth,
   );
 
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -52,7 +64,7 @@ const ProfilePage = () => {
       fullName: fullName || "",
       email: email || "",
     }),
-    [fullName, email]
+    [fullName, email],
   );
 
   const {
@@ -175,179 +187,272 @@ const ProfilePage = () => {
     });
   };
 
+  const inputClasses =
+    "w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium text-slate-900 placeholder:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed";
+  const labelClasses = "block text-sm font-bold text-slate-700 mb-2 ml-1";
+
   return (
-    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="bg-white shadow-sm rounded-xl overflow-hidden border border-gray-200">
+    <div className="min-h-screen bg-slate-50/50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white shadow-2xl shadow-slate-200/50 rounded-4xl overflow-hidden border border-slate-100"
+        >
           {/* Header */}
-          <div className="bg-linear-to-br from-blue-600 to-indigo-600 p-6 text-white">
-            <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-semibold">Profile</h1>
+          <div className="bg-slate-900 p-8 sm:p-10 relative overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,#3b82f6_0%,transparent_50%)] opacity-20" />
+            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+              <div>
+                <h1 className="text-3xl font-black text-white tracking-tight mb-2">
+                  Account Settings
+                </h1>
+                <p className="text-slate-400 font-medium">
+                  Manage your administrator profile and preferences
+                </p>
+              </div>
               <button
                 onClick={() => navigate(-1)}
-                className="p-2 rounded-full hover:bg-white/10 transition-colors"
-                aria-label="Close"
+                className="group flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white/10 text-white font-bold hover:bg-white/20 transition-all backdrop-blur-md border border-white/10"
               >
-                <X size={20} />
+                <ArrowLeft
+                  size={18}
+                  className="group-hover:-translate-x-1 transition-transform"
+                />
+                Back
               </button>
             </div>
           </div>
 
           {/* Content */}
-          <form
-            className="p-6 md:p-8 space-y-8"
-            onSubmit={handleSubmit(onSubmit)}
-          >
-            {/* Avatar */}
-            <div className="flex items-start gap-6">
-              <div>
-                <img
-                  src={
-                    selectedImageUrl ||
-                    profileImage ||
-                    (fullName
-                      ? `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          fullName
-                        )}`
-                      : "")
-                  }
-                  alt="Profile"
-                  className="w-28 h-28 rounded-full object-cover border border-gray-200 shadow-sm bg-white cursor-pointer hover:ring-2 hover:ring-blue-500"
-                  onClick={() => document.getElementById(fileInputId)?.click()}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  id={fileInputId}
-                  key={fileInputKey}
-                  {...profileImageRegister}
-                  onChange={(e) => {
-                    profileImageRHFOnChange(e);
-                    handleFileChange(e);
-                  }}
-                  ref={(e) => {
-                    profileImageFieldRef(e);
-                  }}
-                />
-                {selectedImageUrl || profileImage ? (
-                  <button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    disabled={isDeleting}
-                    className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-gray-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 w-max"
-                  >
-                    <Trash2 size={16} /> Delete Profile Image
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsEditing(true);
-                      document.getElementById(fileInputId)?.click();
-                    }}
-                    className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50 w-max"
-                    aria-label="Upload profile image"
-                  >
-                    <Camera size={16} /> Upload Image
-                  </button>
-                )}
-                {selectedFile && (
-                  <button
-                    type="button"
-                    onClick={handleUploadSelectedImage}
-                    disabled={isUploading}
-                    className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 w-max"
-                  >
-                    <Upload size={16} /> Upload Selected Image
-                  </button>
-                )}
-                <p className="text-xs text-gray-500">JPEG/PNG up to 5MB.</p>
-              </div>
-            </div>
-
-            {/* Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
-                  placeholder="Your full name"
-                  {...register("fullName")}
-                  disabled={!isEditing}
-                />
-                {errors.fullName && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {errors.fullName.message as string}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Email
-                </label>
-                <div className="mt-1 relative">
-                  <Mail
-                    size={16}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  />
-                  <input
-                    type="email"
-                    className="w-full rounded-lg border border-gray-300 pl-9 pr-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
-                    placeholder="you@example.com"
-                    {...register("email")}
-                    disabled={!isEditing}
-                  />
+          <div className="p-8 sm:p-10">
+            <form className="space-y-10" onSubmit={handleSubmit(onSubmit)}>
+              {/* Avatar Section */}
+              <section>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-inner">
+                    <Camera size={20} />
+                  </div>
+                  <h2 className="text-xl font-black text-slate-900 leading-none">
+                    Profile Picture
+                  </h2>
                 </div>
-                {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {errors.email.message as string}
-                  </p>
-                )}
-              </div>
-            </div>
 
-            {/* Actions */}
-            <div className="flex items-center justify-end gap-3 pt-2">
-              {!isEditing ? (
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50"
-                >
-                  <Edit size={18} /> Edit Profile
-                </button>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      reset(defaultValues);
-                      setSelectedImageUrl(undefined);
-                      setSelectedFile(null);
-                      setIsEditing(false);
-                    }}
-                    className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isUpdating || (!isDirty && !selectedImageUrl)}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
-                  >
-                    <Save size={18} /> Save Changes
-                  </button>
-                </>
-              )}
-            </div>
-          </form>
+                <div className="flex flex-col sm:flex-row items-center gap-8 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
+                  <div className="relative group">
+                    <div
+                      className="w-32 h-32 rounded-4xl bg-white border-2 border-slate-200 shadow-xl overflow-hidden flex items-center justify-center group-hover:border-blue-500 transition-all cursor-pointer"
+                      onClick={() =>
+                        document.getElementById(fileInputId)?.click()
+                      }
+                    >
+                      <img
+                        src={
+                          selectedImageUrl ||
+                          profileImage ||
+                          (fullName
+                            ? `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                fullName,
+                              )}&background=random&size=128`
+                            : "")
+                        }
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                      <ShieldCheck
+                        size={12}
+                        className="absolute left-1 text-white opacity-0 group-has-checked:opacity-100 transition-opacity"
+                      />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Camera size={32} className="text-white" />
+                      </div>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      id={fileInputId}
+                      key={fileInputKey}
+                      {...profileImageRegister}
+                      onChange={(e) => {
+                        profileImageRHFOnChange(e);
+                        handleFileChange(e);
+                      }}
+                      ref={(e) => {
+                        profileImageFieldRef(e);
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-3 flex-1 text-center sm:text-left">
+                    <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
+                      {selectedFile ? (
+                        <button
+                          type="button"
+                          onClick={handleUploadSelectedImage}
+                          disabled={isUploading}
+                          className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-blue-600 text-white font-black hover:bg-blue-700 disabled:opacity-60 shadow-lg shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                        >
+                          {isUploading ? (
+                            <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            <Upload size={18} />
+                          )}
+                          Complete Upload
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsEditing(true);
+                            document.getElementById(fileInputId)?.click();
+                          }}
+                          className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white text-slate-700 font-bold border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all active:scale-[0.98]"
+                        >
+                          <Camera size={18} />
+                          Change Photo
+                        </button>
+                      )}
+
+                      {(profileImage || selectedImageUrl) && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveImage}
+                          disabled={isDeleting}
+                          className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white text-red-600 font-bold border-2 border-red-50 hover:bg-red-50 transition-all active:scale-[0.98]"
+                        >
+                          <Trash2 size={18} />
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-sm font-medium text-slate-500">
+                      Recommended: Square JPG/PNG. Maximum file size 5MB.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              {/* Personal Details Section */}
+              <section>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-inner">
+                    <User size={20} />
+                  </div>
+                  <h2 className="text-xl font-black text-slate-900 leading-none">
+                    Personal Details
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 ring-1 ring-slate-100 p-8 rounded-4xl bg-white shadow-sm transition-all hover:shadow-md">
+                  {/* Full Name */}
+                  <div className="space-y-1">
+                    <label className={labelClasses}>Full Name</label>
+                    <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors pointer-events-none">
+                        <User size={18} />
+                      </div>
+                      <input
+                        type="text"
+                        className={`${inputClasses} pl-11`}
+                        placeholder="Alexander Pierce"
+                        {...register("fullName")}
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    {errors.fullName && (
+                      <p className="mt-1.5 text-xs font-bold text-red-500 ml-1">
+                        {errors.fullName.message as string}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Email */}
+                  <div className="space-y-1">
+                    <label className={labelClasses}>Email Address</label>
+                    <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors pointer-events-none">
+                        <Mail size={18} />
+                      </div>
+                      <input
+                        type="email"
+                        className={`${inputClasses} pl-11`}
+                        placeholder="admin@example.com"
+                        {...register("email")}
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    {errors.email && (
+                      <p className="mt-1.5 text-xs font-bold text-red-500 ml-1">
+                        {errors.email.message as string}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </section>
+
+              {/* Footer Actions */}
+              <div className="flex flex-col sm:flex-row items-center justify-end gap-4 pt-6 mt-6 border-t border-slate-100">
+                <AnimatePresence mode="wait">
+                  {!isEditing ? (
+                    <motion.button
+                      key="edit-trigger"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      type="button"
+                      onClick={() => setIsEditing(true)}
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-slate-900 text-white font-black hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-[0.98]"
+                    >
+                      <Edit size={20} />
+                      Edit Profile
+                    </motion.button>
+                  ) : (
+                    <motion.div
+                      key="edit-actions"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          reset(defaultValues);
+                          setSelectedImageUrl(undefined);
+                          setSelectedFile(null);
+                          setIsEditing(false);
+                        }}
+                        className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white text-slate-600 font-black border-2 border-slate-100 hover:bg-slate-50 transition-all active:scale-[0.98]"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isUpdating || (!isDirty && !selectedImageUrl)}
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-blue-600 text-white font-black hover:bg-blue-700 disabled:opacity-60 disabled:scale-100 shadow-xl shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        {isUpdating ? (
+                          <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          <Save size={20} />
+                        )}
+                        Save Changes
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </form>
+          </div>
+        </motion.div>
+
+        {/* Security Alert Hook */}
+        <div className="mt-8 flex items-center justify-center gap-2 text-slate-400 font-bold bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-white">
+          <Shield size={16} />
+          <p className="text-xs uppercase tracking-widest">
+            Secure Administrator Environment
+          </p>
         </div>
       </div>
     </div>

@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
-import { MessageCircle, X, Loader2 } from "lucide-react";
+import { MessageCircle, X, Loader2, SendHorizontal } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 const WelcomeMessage = () => (
-  <div className="text-center py-8 px-4 text-slate-500">
-    <MessageCircle className="w-12 h-12 mx-auto mb-4 text-emerald-500" />
-    <h3 className="text-lg font-semibold mb-2 text-slate-800">
-      Welcome to Online-Examination Assistant
+  <div className="text-center py-10 px-6 text-slate-500">
+    <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-inner ring-1 ring-emerald-100">
+      <MessageCircle className="w-8 h-8 text-emerald-500" />
+    </div>
+    <h3 className="text-xl font-black mb-2 text-slate-900 tracking-tight">
+      ExamHub Assistant
     </h3>
-    <p className="text-sm max-w-xs mx-auto text-slate-600">
-      Ask me anything about Exam, Rules, or services. I'm here to help!
+    <p className="text-sm max-w-[200px] mx-auto text-slate-500 font-medium leading-relaxed">
+      Smart assistance for exam management and troubleshooting.
     </p>
   </div>
 );
@@ -75,7 +77,7 @@ Main capabilities:
 - Student authentication and exam participation
 - Exam attempts, answer saving/autosave, submission
 - Proctoring: camera frame analysis + voice detection warnings
-- Biometrics: face enrollment/verification (keystroke verification planned as a future enhancement)
+- Biometrics: face enrollment/verification
 - Admin review & grading, attempt status (PASS/FAIL), termination control
 
 ====================
@@ -89,96 +91,28 @@ PROJECTS IN THIS REPOSITORY
 
 2) online-examination-adminpanel (Admin Web App)
 - React + TypeScript + Vite
-- Uses Axios with baseURL: http://localhost:3000/api (with cookies)
 - Admin flows include: manage exams/questions, manage students, view attempts, review answers, grade attempts, terminate attempts, log cheat events
 
 3) online-examination-backend (API + Socket server)
-- Node.js + Express
-- Database: Postgres via TypeORM (synchronize enabled for dev)
+- Database: Postgres via TypeORM
 - Auth: middleware-based; API uses cookies (withCredentials true on clients)
-- Main API prefixes:
-  - /api/admin
-  - /api/student
-  - /api/biometric
-  - /api/proctoring
-- Real-time: Socket.IO rooms
-  - "admins" room for admin events
-  - per-attempt room: attempt:{attemptId}
 
 4) online-examination-mlWorkers (Python ML services)
-- face-ml-worker: FastAPI
-  - POST /analyze-frame (image base64/dataURL) => faces, objects, direction, fraud_severity
-  - POST /enroll-face (user_id + selfie video URL)
-  - GET /health, GET /enrollment-status/{user_id}
-- keystroke-ml-worker: FastAPI (future enhancement)
-  - planned endpoints: POST /enroll, POST /verify
+- face-ml-worker: FastAPI (/analyze-frame, /enroll-face)
 - voice-ml-worker: FastAPI
-  - provides voice monitoring endpoints (health/config/start/stop) and attempt monitoring endpoints
-
-====================
-KEY RUNTIME FLOWS (END-TO-END)
-====================
-EXAM CREATION (ADMIN):
-- Admin authenticates
-- Admin creates exam (title/description/subject/timing/duration/marks)
-- Admin adds questions (MCQ or typing) and publishes exam
-
-EXAM START (STUDENT):
-- Student authenticates
-- Student verifies face BEFORE starting an attempt (biometric verification step)
-- Backend creates an ExamAttempt when student starts the exam
-
-DURING EXAM (PROCTORING):
-- Student app captures camera frames and calls backend:
-  - POST /api/proctoring/attempt/:attemptId/check-frame
-  - Backend forwards to Face ML Worker /analyze-frame
-  - Backend stores CheatEvent records and emits Socket.IO events
-- Student app listens on Socket.IO:
-  - event: cheat:warning => show warnings to student
-  - event: cheat:event => useful for monitoring/review
-- Voice warnings can also be emitted (voice-related warnings are treated specially in UI)
-
-BIOMETRICS DURING EXAM (OPTIONAL/CONFIG DEPENDENT):
-- Face enrollment for an attempt can be triggered and stored as flags on ExamAttempt
-- Keystroke verification is a planned future enhancement (not currently part of the active monitoring flow)
-
-SUBMISSION + REVIEW:
-- Student submits attempt
-- Admin reviews attempt details (questions + answers) and grades
-- Admin can mark PASS/FAIL and set gradedBy/gradedAt
-
-====================
-DATA MODEL (WHAT IS STORED)
-====================
-Use these entities in explanations:
-- Exam: includes timing, marks, proctoring flags (microphoneRequired, faceDetectionRequired), questions
-- ExamAttempt: startedAt/submittedAt, warningCount/maxWarnings, termination flags, face/keystroke flags, manualStatus, gradedBy/gradedAt
-- CheatEvent: attempt, eventType, confidence, screenshot (optional base64), severity, causedWarning/causedTermination
-- Student/Admin, Answer, Option, Question
 
 ====================
 TROUBLESHOOTING GUIDELINES
 ====================
 When user reports an issue, ask for:
 - which app (student frontend vs admin panel)
-- which environment (local ports, env vars)
-- the exact API endpoint or UI page
+- the environment/logs
 - console/network errors
 Then propose likely causes (CORS, auth cookies, env vars, ML worker down, DB connection) and concrete fixes.
 
-====================
-RESPONSE FORMAT
-====================
-When possible, answer using this structure:
-1) Summary
-2) Steps / How it works
-3) Technical details (APIs/events/data)
-4) Common issues & fixes
+RESPONSE FORMAT: Concise summary + technical details.
+User message: ${input}`;
 
-answer shortly , dont long.
-User message:
-${input}
-`;
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
         {
@@ -241,114 +175,112 @@ ${input}
   };
 
   return (
-    <div className="fixed md:bottom-6 bottom-8 left-6 z-60">
+    <div className="fixed md:bottom-8 bottom-10 right-8 z-60">
       {/* Toggle Button */}
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="cursor-pointer text-white bg-linear-to-br from-emerald-500 to-teal-600 rounded-full p-4 shadow-2xl hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 border border-emerald-400/30 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-emerald-300/50"
+          className="cursor-pointer text-white bg-linear-to-tr from-blue-600 to-indigo-600 rounded-2xl p-4 shadow-2xl hover:shadow-blue-500/40 transition-all duration-300 border border-blue-400/30 hover:scale-110 active:scale-95 group"
         >
-          <MessageCircle size={24} className="text-white drop-shadow-sm" />
+          <MessageCircle
+            size={24}
+            className="group-hover:rotate-12 transition-transform duration-300"
+          />
         </button>
       )}
 
       {/* Chat Interface */}
       {open && (
-        <div className="w-[88vw] max-w-sm md:max-w-md lg:max-w-lg bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-emerald-200/60 overflow-hidden animate-in fade-in-0 zoom-in-95">
-          <div className="flex items-center justify-between bg-linear-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white px-4 py-3 font-semibold shadow-inner">
-            <span className="flex items-center gap-2">
-              <MessageCircle size={18} className="text-white drop-shadow" />{" "}
-              Tech It Easy Assistant
-            </span>
+        <div className="w-[90vw] max-w-[400px] bg-white/95 backdrop-blur-xl rounded-4xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] border border-slate-200/50 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex items-center justify-between bg-linear-to-r from-blue-600 to-indigo-600 text-white px-6 py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                <MessageCircle size={18} />
+              </div>
+              <span className="font-black tracking-tight text-sm uppercase">
+                Assistant
+              </span>
+            </div>
             <button
-              className="rounded-full hover:bg-white/20 p-1 transition-all duration-200 hover:scale-110"
+              className="rounded-xl hover:bg-white/10 p-2 transition-all duration-200"
               onClick={() => setOpen(false)}
-              aria-label="Close chat"
             >
-              <X size={18} className="text-white" />
+              <X size={20} />
             </button>
           </div>
 
-          <div className="h-[60vh] max-h-[70vh] overflow-y-auto p-3 space-y-2 bg-linear-to-b from-slate-50 to-white">
+          <div className="h-[450px] overflow-y-auto p-6 space-y-4 custom-scrollbar bg-slate-50/30">
             {messages.length === 0 ? (
               <WelcomeMessage />
             ) : (
               messages.map((msg, i) => (
                 <div
                   key={i}
-                  className={`max-w-[85%] p-4 rounded-2xl text-sm shadow-md transition-all duration-200 ${
-                    msg.role === "user"
-                      ? "ml-auto bg-linear-to-br from-blue-500 to-indigo-500 text-white border border-blue-300/30"
-                      : "mr-auto bg-linear-to-br from-emerald-100 to-teal-100 text-slate-800 border border-emerald-300/50"
-                  }`}
+                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      h3: ({ ...props }) => (
-                        <h3
-                          className="text-base font-semibold mt-3 mb-2"
-                          {...props}
-                        />
-                      ),
-                      p: ({  ...props }) => (
-                        <p className="mb-2 leading-relaxed" {...props} />
-                      ),
-                      ul: ({ ...props }) => (
-                        <ul className="list-disc pl-5 mb-2" {...props} />
-                      ),
-                      li: ({  ...props }) => (
-                        <li className="mb-1" {...props} />
-                      ),
-                      strong: ({  ...props }) => (
-                        <strong className="font-semibold" {...props} />
-                      ),
-                    }}
+                  <div
+                    className={`max-w-[85%] p-4 rounded-3xl text-sm leading-relaxed ${
+                      msg.role === "user"
+                        ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20 rounded-tr-none"
+                        : "bg-white text-slate-700 border border-slate-100 shadow-sm rounded-tl-none font-medium"
+                    }`}
                   >
-                    {msg.text}
-                  </ReactMarkdown>
+                    <div className="prose prose-sm prose-slate prose-p:leading-relaxed prose-headings:font-black">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          h3: ({ ...props }) => (
+                            <h3
+                              className="text-sm font-black mb-1 mt-2"
+                              {...props}
+                            />
+                          ),
+                          p: ({ ...props }) => (
+                            <p className="mb-2 last:mb-0" {...props} />
+                          ),
+                          ul: ({ ...props }) => (
+                            <ul className="list-disc pl-4 mb-2" {...props} />
+                          ),
+                          li: ({ ...props }) => (
+                            <li className="mb-0.5" {...props} />
+                          ),
+                          strong: ({ ...props }) => (
+                            <strong className="font-black" {...props} />
+                          ),
+                        }}
+                      >
+                        {msg.text}
+                      </ReactMarkdown>
+                    </div>
+                  </div>
                 </div>
               ))
             )}
             {loading && (
-              <div className="flex items-center gap-2 text-slate-500 text-sm animate-pulse">
-                <Loader2 className="h-4 w-4 animate-spin text-emerald-500" />
-                <span>Thinking...</span>
+              <div className="flex items-center gap-3 text-slate-400 text-xs font-bold uppercase tracking-widest pl-2">
+                <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                <span>Thinking</span>
               </div>
             )}
           </div>
 
-          <div className="border-t border-emerald-200/60 p-2 bg-linear-to-t from-white via-slate-50/90 to-slate-50/80 backdrop-blur supports-backdrop-filter:bg-white/90">
-            <div className="flex items-center gap-2">
+          <div className="p-4 border-t border-slate-100 bg-white">
+            <div className="relative flex items-center gap-3">
               <input
                 type="text"
                 value={input}
-                placeholder="Ask me anything about Online-examination..."
+                placeholder="Type your message..."
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                className="min-w-0 flex-1 h-10 px-4 rounded-full border border-emerald-300/60 bg-white/80 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-sm shadow-inner transition-all duration-200"
+                className="w-full h-12 pl-5 pr-14 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium text-sm"
                 disabled={loading}
               />
               <button
                 onClick={sendMessage}
                 disabled={!input.trim() || loading}
-                className="shrink-0 inline-flex items-center justify-center h-10 w-10 rounded-full bg-linear-to-br from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 disabled:from-slate-300 disabled:to-slate-400 transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105"
-                aria-label="Send message"
+                className="absolute right-1 text-white bg-blue-600 p-2.5 rounded-xl hover:bg-blue-700 disabled:opacity-30 transition-all duration-200 shadow-sm"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="m22 2-7 20-4-9-9-4Z" />
-                  <path d="M22 2 11 13" />
-                </svg>
+                <SendHorizontal size={20} />
               </button>
             </div>
           </div>

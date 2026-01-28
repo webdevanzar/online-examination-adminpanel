@@ -22,6 +22,7 @@ import {
   type Exam,
 } from "../services/exam";
 import { formatRelativeDate } from "../utils/helpers";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Exams: React.FC = () => {
   const navigate = useNavigate();
@@ -30,7 +31,9 @@ const Exams: React.FC = () => {
   const [showUpdatePopup, setShowUpdatePopup] = useState(false);
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "upcoming" | "active" | "completed">("all");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "upcoming" | "active" | "completed"
+  >("all");
   const [subjectFilter, setSubjectFilter] = useState("all");
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
 
@@ -39,16 +42,23 @@ const Exams: React.FC = () => {
   const updateExamMutation = useUpdateExam();
   const deleteExamMutation = useDeleteExam();
 
-
   // Get unique subjects for filter
   const subjects = useMemo(() => {
     if (!exams) return [];
-    return Array.from(new Set(exams.map((exam) => exam.subject).filter(Boolean)));
+    return Array.from(
+      new Set(exams.map((exam) => exam.subject).filter(Boolean)),
+    );
   }, [exams]);
 
   // Filter and categorize exams
-  const {  allFilteredExams } = useMemo(() => {
-    if (!exams) return { upcomingExams: [], activeExams: [], completedExams: [], allFilteredExams: [] };
+  const { allFilteredExams } = useMemo(() => {
+    if (!exams)
+      return {
+        upcomingExams: [],
+        activeExams: [],
+        completedExams: [],
+        allFilteredExams: [],
+      };
 
     let filtered = exams;
 
@@ -57,7 +67,7 @@ const Exams: React.FC = () => {
       filtered = filtered.filter(
         (exam) =>
           exam.title.toLowerCase().includes(search.toLowerCase()) ||
-          exam.subject.toLowerCase().includes(search.toLowerCase())
+          exam.subject.toLowerCase().includes(search.toLowerCase()),
       );
     }
 
@@ -70,7 +80,8 @@ const Exams: React.FC = () => {
     const now = new Date();
     const upcoming = filtered.filter((exam) => new Date(exam.startTime) > now);
     const active = filtered.filter(
-      (exam) => new Date(exam.startTime) <= now && new Date(exam.endTime) >= now
+      (exam) =>
+        new Date(exam.startTime) <= now && new Date(exam.endTime) >= now,
     );
     const completed = filtered.filter((exam) => new Date(exam.endTime) < now);
 
@@ -145,14 +156,14 @@ const Exams: React.FC = () => {
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuOpen && !(event.target as Element).closest('.menu-container')) {
+      if (menuOpen && !(event.target as Element).closest(".menu-container")) {
         setMenuOpen(null);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [menuOpen]);
 
@@ -161,77 +172,94 @@ const Exams: React.FC = () => {
     const end = new Date(exam.endTime);
     const now = new Date();
 
-    if (start > now) return { label: "Upcoming", color: "bg-blue-100 text-blue-800" };
-    if (start <= now && end >= now) return { label: "Active", color: "bg-green-100 text-green-800" };
+    if (start > now)
+      return { label: "Upcoming", color: "bg-blue-100 text-blue-800" };
+    if (start <= now && end >= now)
+      return { label: "Active", color: "bg-green-100 text-green-800" };
     return { label: "Completed", color: "bg-gray-100 text-gray-800" };
   };
 
   return (
     <div className="animate-fadeIn">
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">Exam Management</h2>
-          <p className="text-gray-500 text-sm mt-1">Create and manage exams</p>
+          <h2 className="text-4xl font-black text-slate-900 tracking-tight">
+            Exam Management
+          </h2>
+          <p className="text-slate-500 font-medium mt-1">
+            Create, monitor, and manage your online assessments.
+          </p>
         </div>
         <button
           onClick={() => setShowPopup(true)}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center gap-2 shadow-sm"
+          className="px-6 py-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 flex items-center justify-center gap-2 font-bold group"
         >
-          <Plus size={18} />
-          Create Exam
+          <div className="p-1 bg-white/20 rounded-lg group-hover:rotate-90 transition-transform">
+            <Plus size={18} />
+          </div>
+          Create New Exam
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Filters Container */}
+      <div className="bg-white p-8 rounded-4xl shadow-sm border border-slate-100 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           {/* Search */}
-          <div className="relative">
+          <div className="md:col-span-6 relative">
             <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              size={18}
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"
+              size={20}
             />
             <input
               type="text"
-              placeholder="Search exams..."
+              placeholder="Search by title or subject..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium"
             />
           </div>
 
           {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-          >
-            <option value="all">All Status</option>
-            <option value="upcoming">Upcoming</option>
-            <option value="active">Active</option>
-            <option value="completed">Completed</option>
-          </select>
+          <div className="md:col-span-3">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium appearance-none cursor-pointer"
+            >
+              <option value="all">All Status</option>
+              <option value="upcoming">Upcoming</option>
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
 
           {/* Subject Filter */}
-          <select
-            value={subjectFilter}
-            onChange={(e) => setSubjectFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-          >
-            <option value="all">All Subjects</option>
-            {subjects.map((subject) => (
-              <option key={subject} value={subject}>
-                {subject}
-              </option>
-            ))}
-          </select>
+          <div className="md:col-span-3">
+            <select
+              value={subjectFilter}
+              onChange={(e) => setSubjectFilter(e.target.value)}
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium appearance-none cursor-pointer"
+            >
+              <option value="all">All Subjects</option>
+              {subjects.map((subject) => (
+                <option key={subject} value={subject}>
+                  {subject}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        {/* Results Count */}
+        {/* Results Info */}
         {!isLoading && exams && (
-          <div className="mt-4 text-sm text-gray-600">
-            Showing {allFilteredExams.length} of {exams.length} exams
+          <div className="mt-6 flex items-center gap-2 text-sm">
+            <div className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full font-bold">
+              {allFilteredExams.length}
+            </div>
+            <span className="text-slate-500 font-medium">
+              exams found matching your criteria
+            </span>
           </div>
         )}
       </div>
@@ -245,138 +273,189 @@ const Exams: React.FC = () => {
         </div>
       )}
 
-      {/* Loading State */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div
-              key={i}
-              className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 animate-pulse"
-            >
-              <div className="h-6 bg-gray-200 rounded w-3/4 mb-3"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-            </div>
-          ))}
-        </div>
-      ) : allFilteredExams.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-          <FileCheck className="mx-auto text-gray-300 mb-4" size={64} />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No exams found</h3>
-          <p className="text-gray-500 text-sm mb-6">
-            {search || subjectFilter !== "all" || statusFilter !== "all"
-              ? "Try adjusting your filters"
-              : "Get started by creating your first exam"}
-          </p>
-          {!search && statusFilter === "all" && (
-            <button
-              onClick={() => setShowPopup(true)}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 inline-flex items-center gap-2"
-            >
-              <Plus size={18} />
-              Create Exam
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {allFilteredExams.map((exam) => {
-            const status = getExamStatus(exam);
-            return (
+      {/* Exam Grid */}
+      <AnimatePresence mode="popLayout">
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
-                key={exam.id}
-                className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 relative group"
+                key={i}
+                className="bg-white p-8 rounded-4xl shadow-sm border border-slate-100 animate-pulse"
               >
-                {/* Action Menu */}
-                <div className="absolute top-4 right-4 menu-container">
-                  <button
-                    onClick={() => setMenuOpen(menuOpen === exam.id ? null : exam.id)}
-                    className="p-1 hover:bg-gray-100 rounded transition-colors"
-                  >
-                    <MoreVertical size={18} className="text-gray-500" />
-                  </button>
-
-                  {menuOpen === exam.id && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                      <button
-                        onClick={() => openUpdatePopup(exam)}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100"
-                      >
-                        <Edit size={14} />
-                        Edit Exam Details
-                      </button>
-                      <button
-                        onClick={() => {
-                          navigate(`/exam/${exam.id}/questions`);
-                          setMenuOpen(null);
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
-                      >
-                        <Edit size={14} />
-                        Manage Questions
-                      </button>
-                      <button
-                        onClick={() => {
-                          handleDeleteExam(exam.id);
-                          setMenuOpen(null);
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-red-600 border-t border-gray-100"
-                      >
-                        <Trash2 size={14} />
-                        Delete Exam
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Content */}
-                <div
-                  onClick={() => navigate(`/exam/${exam.id}/questions`)}
-                  className="cursor-pointer"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-lg font-semibold text-gray-900 line-clamp-1 pr-8">
-                      {exam.title}
-                    </h3>
-                  </div>
-
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Calendar size={14} />
-                      <span>{formatRelativeDate(exam.startTime)}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Clock size={14} />
-                      <span>{exam.duration} minutes</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${status.color}`}>
-                      {status.label}
-                    </span>
-                    {exam.subject && (
-                      <span className="text-xs text-gray-500 font-medium">{exam.subject}</span>
-                    )}
-                  </div>
-
-                  <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
-                    {exam.questionCount || 0} questions • {exam.totalMarks} marks
-                  </div>
+                <div className="h-8 bg-slate-100 rounded-xl w-3/4 mb-4"></div>
+                <div className="h-4 bg-slate-100 rounded-xl w-1/2 mb-6"></div>
+                <div className="space-y-3">
+                  <div className="h-4 bg-slate-50 rounded-xl w-full"></div>
+                  <div className="h-4 bg-slate-50 rounded-xl w-5/6"></div>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
+            ))}
+          </div>
+        ) : allFilteredExams.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-4xl shadow-sm border border-slate-100 p-20 text-center"
+          >
+            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <FileCheck className="text-slate-300" size={48} />
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 mb-2">
+              No exams found
+            </h3>
+            <p className="text-slate-500 font-medium mb-8 max-w-sm mx-auto">
+              {search || subjectFilter !== "all" || statusFilter !== "all"
+                ? "We couldn't find any exams matching your current filters. Try resetting them."
+                : "Your platform is ready for some content. Start by creating your very first examination."}
+            </p>
+            {!search && statusFilter === "all" && (
+              <button
+                onClick={() => setShowPopup(true)}
+                className="px-8 py-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all font-bold"
+              >
+                Create Exam
+              </button>
+            )}
+          </motion.div>
+        ) : (
+          <motion.div
+            layout
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          >
+            {allFilteredExams.map((exam) => {
+              const status = getExamStatus(exam);
+              return (
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  key={exam.id}
+                  className="bg-white p-8 rounded-4xl shadow-sm border border-slate-100 hover:shadow-2xl hover:border-blue-100 transition-all duration-300 relative group"
+                >
+                  {/* Action Menu */}
+                  <div className="absolute top-6 right-6 menu-container">
+                    <button
+                      onClick={() =>
+                        setMenuOpen(menuOpen === exam.id ? null : exam.id)
+                      }
+                      className="p-2 hover:bg-slate-50 rounded-xl transition-colors"
+                    >
+                      <MoreVertical size={20} className="text-slate-400" />
+                    </button>
+
+                    <AnimatePresence>
+                      {menuOpen === exam.id && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          className="absolute right-0 mt-3 w-56 bg-white border border-slate-100 rounded-2xl shadow-2xl z-20 overflow-hidden"
+                        >
+                          <button
+                            onClick={() => openUpdatePopup(exam)}
+                            className="w-full px-4 py-3 text-left text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-blue-600 flex items-center gap-3 transition-colors"
+                          >
+                            <Edit size={16} />
+                            Edit Details
+                          </button>
+                          <button
+                            onClick={() => {
+                              navigate(`/exam/${exam.id}/questions`);
+                              setMenuOpen(null);
+                            }}
+                            className="w-full px-4 py-3 text-left text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-blue-600 flex items-center gap-3 transition-colors"
+                          >
+                            <Plus size={16} />
+                            Manage Questions
+                          </button>
+                          <div className="border-t border-slate-50"></div>
+                          <button
+                            onClick={() => {
+                              handleDeleteExam(exam.id);
+                              setMenuOpen(null);
+                            }}
+                            className="w-full px-4 py-3 text-left text-sm font-bold text-red-500 hover:bg-red-50 flex items-center gap-3 transition-colors"
+                          >
+                            <Trash2 size={16} />
+                            Delete Exam
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Content */}
+                  <div
+                    onClick={() => navigate(`/exam/${exam.id}/questions`)}
+                    className="cursor-pointer"
+                  >
+                    <div className="mb-6">
+                      <span
+                        className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full ${status.color}`}
+                      >
+                        {status.label}
+                      </span>
+                    </div>
+
+                    <h3 className="text-2xl font-black text-slate-900 mb-4 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">
+                      {exam.title}
+                    </h3>
+
+                    <div className="space-y-3 mb-8">
+                      <div className="flex items-center gap-3 text-sm font-medium text-slate-500">
+                        <div className="p-1.5 rounded-lg bg-slate-50">
+                          <Calendar size={14} className="text-slate-400" />
+                        </div>
+                        <span>{formatRelativeDate(exam.startTime)}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm font-medium text-slate-500">
+                        <div className="p-1.5 rounded-lg bg-slate-50">
+                          <Clock size={14} className="text-slate-400" />
+                        </div>
+                        <span>{exam.duration} minutes</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-6 border-t border-slate-50">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          Subject
+                        </span>
+                        <span className="text-sm font-bold text-slate-900">
+                          {exam.subject || "General"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex flex-col text-right">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            Questions
+                          </span>
+                          <span className="text-sm font-bold text-slate-900">
+                            {exam.questionCount || 0}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {showPopup && (
-        <CreateExamPopup onClose={() => setShowPopup(false)} onSave={handleSaveExam} />
+        <CreateExamPopup
+          onClose={() => setShowPopup(false)}
+          onSave={handleSaveExam}
+        />
       )}
 
       {showUpdatePopup && selectedExam && (
         <UpdateExamPopup
           exam={selectedExam}
+          isOpen={showUpdatePopup}
           onClose={() => {
             setShowUpdatePopup(false);
             setSelectedExam(null);

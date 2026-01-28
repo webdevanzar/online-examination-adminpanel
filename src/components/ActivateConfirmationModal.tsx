@@ -1,6 +1,6 @@
 import React from "react";
 import Modal from "./Modal";
-import { AlertTriangle } from "lucide-react";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 
 interface ActivateConfirmationModalProps {
   isOpen: boolean;
@@ -12,7 +12,9 @@ interface ActivateConfirmationModalProps {
   isLoading?: boolean;
 }
 
-export const ActivateConfirmationModal: React.FC<ActivateConfirmationModalProps> = ({
+export const ActivateConfirmationModal: React.FC<
+  ActivateConfirmationModalProps
+> = ({
   isOpen,
   onClose,
   onConfirm,
@@ -23,23 +25,33 @@ export const ActivateConfirmationModal: React.FC<ActivateConfirmationModalProps>
 }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
-      <div className="space-y-4">
-        <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <AlertTriangle className="text-green-600 shrink-0" size={24} />
-          <p className="text-green-800 text-sm">{message}</p>
+      <div className="space-y-6">
+        <div className="flex flex-col items-center text-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner">
+            <CheckCircle2 size={32} />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-center gap-2 text-emerald-600">
+              <AlertCircle size={16} />
+              <span className="text-xs font-black uppercase tracking-widest">
+                Confirmation Required
+              </span>
+            </div>
+            <p className="text-slate-600 font-medium">{message}</p>
+          </div>
         </div>
 
-        <div className="flex gap-3 justify-end pt-4 border-t">
+        <div className="flex gap-3 justify-stretch pt-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            className="flex-1 px-6 py-3 text-slate-600 bg-slate-50 rounded-2xl font-bold hover:bg-slate-100 transition-all duration-200"
             disabled={isLoading}
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isLoading}
           >
             {isLoading ? "Activating..." : confirmText}

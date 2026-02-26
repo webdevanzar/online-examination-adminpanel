@@ -150,7 +150,11 @@ const AttemptReviewEditor: React.FC<{
           {data.questions.map((q, idx) => {
             const maxMarks = q.marks;
             const current = draftMarks[q.questionId] ?? "";
-            const displayValue = editMode ? current : current === "" ? "0" : current;
+            const displayValue = editMode
+              ? current
+              : current === ""
+                ? "0"
+                : current;
 
             return (
               <div
@@ -221,22 +225,46 @@ const AttemptReviewEditor: React.FC<{
                     </p>
                     <div className="space-y-2">
                       {q.options.map((opt) => {
-                        const isSelected =
-                          String(q.studentAnswer.selectedOptionId ?? "") ===
-                          String(opt.id);
+                        const isSelected = (
+                          q.studentAnswer.selectedOptionIds ?? []
+                        ).includes(opt.id);
+                        const isCorrect = opt.isCorrect;
+
+                        // Color logic:
+                        // - Correct & selected → green bg
+                        // - Correct & not selected → light green bg
+                        // - Wrong & selected → red bg
+                        // - Neither → neutral
+                        let borderClass = "border-gray-200";
+                        let bgClass = "bg-white";
+                        if (isCorrect && isSelected) {
+                          borderClass = "border-green-400";
+                          bgClass = "bg-green-50";
+                        } else if (isCorrect && !isSelected) {
+                          borderClass = "border-green-200";
+                          bgClass = "bg-green-50/50";
+                        } else if (!isCorrect && isSelected) {
+                          borderClass = "border-red-300";
+                          bgClass = "bg-red-50";
+                        }
+
                         return (
                           <div
                             key={opt.id}
-                            className={`flex items-center justify-between gap-3 p-2 rounded-lg border text-sm ${
-                              opt.isCorrect
-                                ? "border-green-200 bg-green-50"
-                                : "border-gray-200 bg-white"
-                            }`}
+                            className={`flex items-center justify-between gap-3 p-2 rounded-lg border text-sm ${borderClass} ${bgClass}`}
                           >
                             <span className="text-gray-800">{opt.text}</span>
-                            <span className="text-xs font-semibold">
-                              {opt.isCorrect ? "Correct" : ""}
-                              {isSelected ? " (Selected)" : ""}
+                            <span className="flex items-center gap-1.5">
+                              {isCorrect && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                                  ✓ Correct Answer
+                                </span>
+                              )}
+                              {isSelected && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                                  ● Student Selected
+                                </span>
+                              )}
                             </span>
                           </div>
                         );

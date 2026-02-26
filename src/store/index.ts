@@ -4,7 +4,7 @@ import authReducer from "./slice/authSlice";
 import storage from "redux-persist/lib/storage";
 
 const persistConfig = {
-  key: "root",
+  key: "online-admin-root",
   storage,
   whitelist: ["auth"],
 };
@@ -21,7 +21,7 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: false,
     }),
-    devTools: true,
+  devTools: true,
 });
 
 export const persistor = persistStore(store);

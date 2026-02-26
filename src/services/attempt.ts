@@ -46,7 +46,7 @@ export type AttemptReviewQuestion = {
   hasMultipleCorrect: boolean;
   options: Array<{ id: string; text: string; isCorrect: boolean }>;
   studentAnswer: {
-    selectedOptionId: string | null;
+    selectedOptionIds: string[];
     writtenAnswer: string | null;
   };
   marksObtained: number;
@@ -61,7 +61,12 @@ export type AttemptReviewResponse = {
     manualStatus: "PASS" | "FAIL" | null;
     gradedAt: string | null;
     student: { id: string; fullName: string; email: string };
-    exam: { id: string; title: string; totalMarks: number; passingMarks: number };
+    exam: {
+      id: string;
+      title: string;
+      totalMarks: number;
+      passingMarks: number;
+    };
   };
   questions: AttemptReviewQuestion[];
 };
@@ -142,7 +147,9 @@ export const useGradeAttempt = () => {
     onSuccess: (_, vars) => {
       toast.success("Grading saved successfully");
       queryClient.invalidateQueries({ queryKey: attemptKeys.all });
-      queryClient.invalidateQueries({ queryKey: attemptKeys.detail(vars.attemptId) });
+      queryClient.invalidateQueries({
+        queryKey: attemptKeys.detail(vars.attemptId),
+      });
     },
     onError: (err: unknown) => {
       const error = err as AxiosError<{ message: string }>;
@@ -166,7 +173,7 @@ export const useGradeAttempt = () => {
 // =================== TERMINATE ATTEMPT ===================
 const terminateAttemptApi = async (attemptId: string) => {
   const res = await axiosInstance.post(
-    `/admin/attempts/${attemptId}/terminate`
+    `/admin/attempts/${attemptId}/terminate`,
   );
   return res.data;
 };
@@ -209,7 +216,7 @@ const logCheatEventApi = async ({
 }) => {
   const res = await axiosInstance.post(
     `/admin/attempts/${attemptId}/cheat-events`,
-    data
+    data,
   );
   return res.data;
 };
@@ -249,7 +256,7 @@ const setAttemptStatusApi = async ({
 }) => {
   const res = await axiosInstance.post(
     `/admin/attempts/${attemptId}/set-status`,
-    { status }
+    { status },
   );
   return res.data;
 };

@@ -12,7 +12,6 @@ import ProfilePage from "./pages/profile";
 import { ProtectedRouteAfterLogin } from "./middleware/ProtectedRouteAfterLogin";
 import { ProtectedRoute } from "./middleware/ProtectedRoute";
 import { Toaster } from "sonner";
-import { ChatBot } from "./components/ChatBot";
 
 function App() {
   return (
@@ -39,7 +38,7 @@ function App() {
           </Route>
         </Route>
       </Routes>
-      <ChatBot/>
+
       <Toaster />
     </BrowserRouter>
   );

@@ -1,5 +1,14 @@
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Users, FileCheck, BarChart3, X } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  FileCheck,
+  BarChart3,
+  X,
+  Sparkles,
+} from "lucide-react";
+import { ChatBotModal } from "./ChatBot";
 
 const Sidebar = ({
   open,
@@ -8,6 +17,8 @@ const Sidebar = ({
   open: boolean;
   setOpen: (value: boolean) => void;
 }) => {
+  const [chatOpen, setChatOpen] = useState(false);
+
   const menuItems = [
     { name: "Dashboard", icon: <LayoutDashboard size={20} />, path: "/" },
     { name: "Students", icon: <Users size={20} />, path: "/students" },
@@ -28,7 +39,7 @@ const Sidebar = ({
       {/* Sidebar */}
       <aside
         className={`
-          fixed md:static top-0 left-0 h-full w-72 bg-slate-900 text-slate-300 shadow-2xl p-6 z-50 border-r border-slate-800
+          fixed md:static top-0 left-0 h-full w-72 bg-slate-900 text-slate-300 shadow-2xl p-6 z-50 border-r border-slate-800 flex flex-col
           transform transition-all duration-300 ease-in-out
           ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
@@ -101,11 +112,44 @@ const Sidebar = ({
           ))}
         </nav>
 
+        {/* AI Assistance Section */}
+        <div className="mt-8">
+          <p className="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">
+            AI Assistance
+          </p>
+          <button
+            onClick={() => setChatOpen(true)}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 group hover:bg-blue-600/10 hover:text-blue-300 text-slate-300 relative overflow-hidden"
+          >
+            {/* Subtle glow bg */}
+            <div className="absolute inset-0 rounded-xl bg-linear-to-r from-blue-600/0 to-indigo-600/0 group-hover:from-blue-600/10 group-hover:to-indigo-600/10 transition-all duration-300" />
+            <div className="relative w-8 h-8 rounded-lg bg-linear-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-shadow duration-200">
+              <Sparkles size={16} className="text-white" />
+            </div>
+            <div className="relative text-left">
+              <p className="text-sm font-semibold leading-tight group-hover:text-blue-300 transition-colors">
+                AI Assistant
+              </p>
+              <p className="text-[10px] text-slate-500 font-medium leading-tight">
+                Powered by Examhub
+              </p>
+            </div>
+            <div className="ml-auto relative">
+              <span className="text-[9px] font-black uppercase tracking-wide bg-blue-600/20 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full">
+                Chat
+              </span>
+            </div>
+          </button>
+        </div>
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
         {/* Bottom Section */}
-        <div className="absolute bottom-8 left-6 right-6">
+        <div className="mt-6">
           <div className="p-4 rounded-2xl bg-linear-to-br from-slate-800 to-slate-900 border border-slate-800/50 shadow-lg">
             <p className="text-xs font-medium text-slate-400 mb-2 italic">
-              Integrity & Excellence
+              Integrity &amp; Excellence
             </p>
             <div className="h-1 w-full bg-slate-700 rounded-full overflow-hidden">
               <div className="h-full w-2/3 bg-blue-500 rounded-full"></div>
@@ -113,6 +157,9 @@ const Sidebar = ({
           </div>
         </div>
       </aside>
+
+      {/* AI Chat Modal */}
+      <ChatBotModal open={chatOpen} onClose={() => setChatOpen(false)} />
     </>
   );
 };

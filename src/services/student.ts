@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "../utils/intercepotor";
 import { toast } from "sonner";
-import type { AxiosError } from "axios";
 
 // =================== TYPES ===================
 export interface Student {
@@ -89,10 +88,8 @@ export const useUpdateStudent = () => {
       toast.success("Student updated successfully");
       queryClient.invalidateQueries({ queryKey: studentKeys.all });
     },
-    onError: (err: unknown) => {
-      const error = err as AxiosError<{ message: string }>;
-      const msg = error.response?.data?.message || "Failed to update student";
-      toast.error(msg);
+    onError: () => {
+      
     },
   });
 };
@@ -112,10 +109,8 @@ export const useDeleteStudent = () => {
       toast.success("Student deleted successfully");
       queryClient.invalidateQueries({ queryKey: studentKeys.all });
     },
-    onError: (err: unknown) => {
-      const error = err as AxiosError<{ message: string }>;
-      const msg = error.response?.data?.message || "Failed to delete student";
-      toast.error(msg);
+    onError: () => {
+    
     },
   });
 };
@@ -144,10 +139,8 @@ export const useResetStudentPassword = () => {
     onSuccess: () => {
       toast.success("Password reset successfully");
     },
-    onError: (err: unknown) => {
-      const error = err as AxiosError<{ message: string }>;
-      const msg = error.response?.data?.message || "Failed to reset password";
-      toast.error(msg);
+    onError: () => {
+      
     },
   });
 };

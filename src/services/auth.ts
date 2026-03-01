@@ -81,24 +81,8 @@ export const useAdminGoogleAuth = () => {
       dispatch(loginSuccess(data.user));
       toast.success("Logged in with Google");
     },
-    onError: (err: unknown) => {
-      const error = err as AxiosError<{ message: string }>;
-      const msg =
-        error.response?.data?.message ||
-        "Something went wrong with Google login";
-
-      toast.error(msg, {
-        duration: 1500,
-        style: {
-          background: "#FEE2E2",
-          color: "#B91C1C",
-          border: "1px solid #FCA5A5",
-          padding: "12px 16px",
-          borderRadius: "8px",
-          fontSize: "14px",
-          fontWeight: "500",
-        },
-      });
+    onError: () => {
+   
     },
   });
 
@@ -170,25 +154,9 @@ export const useAdminRegister = () => {
   return useMutation({
     mutationFn: registerAdminApi,
     onSuccess: () => {
-      toast.success("Admin registered successfully");
       queryClient.invalidateQueries({ queryKey: ["admins"] });
     },
-    onError: (err: unknown) => {
-      const error = err as AxiosError<{ message: string }>;
-      const msg = error.response?.data?.message || "Something went wrong";
-      toast.error(msg, {
-        duration: 1500,
-        style: {
-          background: "#FEE2E2",
-          color: "#B91C1C",
-          border: "1px solid #FCA5A5",
-          padding: "12px 16px",
-          borderRadius: "8px",
-          fontSize: "14px",
-          fontWeight: "500",
-        },
-      });
-    },
+    onError: () => {},
   });
 };
 
@@ -212,22 +180,7 @@ export const useAdminProfileUpdate = () => {
 
       dispatch(updateProfile(data.user));
     },
-    onError: (err: unknown) => {
-      const error = err as AxiosError<{ message: string }>;
-      const msg = error.response?.data?.message || "Something went wrong";
-      toast.error(msg, {
-        duration: 1500,
-        style: {
-          background: "#FEE2E2",
-          color: "#B91C1C",
-          border: "1px solid #FCA5A5",
-          padding: "12px 16px",
-          borderRadius: "8px",
-          fontSize: "14px",
-          fontWeight: "500",
-        },
-      });
-    },
+    onError: () => {},
   });
 };
 
@@ -250,22 +203,7 @@ export const useAddAdminProfileImage = () => {
       console.log("Profile Image Uploaded");
       dispatch(updateProfile(data.user));
     },
-    onError: (err: unknown) => {
-      const error = err as AxiosError<{ message: string }>;
-      const msg = error.response?.data?.message || "Something went wrong";
-      toast.error(msg, {
-        duration: 1500,
-        style: {
-          background: "#FEE2E2",
-          color: "#B91C1C",
-          border: "1px solid #FCA5A5",
-          padding: "12px 16px",
-          borderRadius: "8px",
-          fontSize: "14px",
-          fontWeight: "500",
-        },
-      });
-    },
+    onError: () => {},
   });
 };
 
@@ -284,21 +222,6 @@ export const useDeleteAdminProfileImage = () => {
       console.log("Profile Image Deleted");
       dispatch(updateProfile(data.user));
     },
-    onError: (err: unknown) => {
-      const error = err as AxiosError<{ message: string }>;
-      const msg = error.response?.data?.message || "Something went wrong";
-      toast.error(msg, {
-        duration: 1500,
-        style: {
-          background: "#FEE2E2",
-          color: "#B91C1C",
-          border: "1px solid #FCA5A5",
-          padding: "12px 16px",
-          borderRadius: "8px",
-          fontSize: "14px",
-          fontWeight: "500",
-        },
-      });
-    },
+    onError: () => {},
   });
 };

@@ -19,7 +19,9 @@ import { StudentEditModal } from "../components/StudentEditModal";
 import { DeleteConfirmationModal } from "../components/DeleteConfirmationModal";
 import { PasswordResetModal } from "../components/PasswordResetModal";
 import { VscActivateBreakpoints } from "react-icons/vsc";
+import { RiVideoOnLine } from "react-icons/ri";
 import { ActivateConfirmationModal } from "../components/ActivateConfirmationModal";
+import { Modal } from "../components/Modal";
 
 type SortField = "fullName" | "email" | "createdAt";
 type SortDirection = "asc" | "desc";
@@ -34,6 +36,7 @@ export const Students: React.FC = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [activateModalOpen, setActivateModalOpen] = useState(false);
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   const { data: students, isLoading, error } = useGetAllStudents();
@@ -97,6 +100,11 @@ export const Students: React.FC = () => {
   const handleActivate = (student: Student) => {
     setSelectedStudent(student);
     setActivateModalOpen(true);
+  };
+
+  const handleViewSelfieVideo = (student: Student) => {
+    setSelectedStudent(student);
+    setVideoModalOpen(true);
   };
 
   const confirmActivate = () => {
@@ -298,6 +306,15 @@ export const Students: React.FC = () => {
                     >
                       <Key size={18} />
                     </button>
+                    {student.selfieVideo && (
+                      <button
+                        onClick={() => handleViewSelfieVideo(student)}
+                        className="p-2 text-violet-600 hover:bg-violet-50 rounded-xl transition-colors"
+                        title="View selfie video"
+                      >
+                        <RiVideoOnLine size={18} />
+                      </button>
+                    )}
                     {student.isActive ? (
                       <button
                         onClick={() => handleDelete(student)}
@@ -354,6 +371,25 @@ export const Students: React.FC = () => {
             studentId={selectedStudent.id}
             studentName={selectedStudent.fullName}
           />
+          <Modal
+            isOpen={videoModalOpen}
+            onClose={() => setVideoModalOpen(false)}
+            title={`Selfie Video — ${selectedStudent.fullName}`}
+            size="md"
+          >
+            {selectedStudent.selfieVideo ? (
+              <video
+                src={selectedStudent.selfieVideo}
+                controls
+                autoPlay
+                className="w-full rounded-2xl"
+              />
+            ) : (
+              <p className="text-slate-500 text-center py-8">
+                No selfie video available for this student.
+              </p>
+            )}
+          </Modal>
         </>
       )}
     </div>

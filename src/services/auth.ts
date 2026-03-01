@@ -81,8 +81,8 @@ export const useAdminGoogleAuth = () => {
       dispatch(loginSuccess(data.user));
       toast.success("Logged in with Google");
     },
-    onError: () => {
-   
+    onError: (error:any) => {
+   toast.error(error.response.data.message)
     },
   });
 
